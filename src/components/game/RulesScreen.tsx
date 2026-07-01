@@ -12,7 +12,6 @@ import {
   ArrowRight,
   Target,
   CheckCircle2,
-  X,
 } from 'lucide-react'
 import { GAME_CONFIG } from '@/config/game'
 import { formatCapitalUnits } from '@/lib/number-format'
@@ -317,16 +316,16 @@ export function RulesScreen({ onStart, hasAlreadyPlayed = false }: RulesScreenPr
             </p>
 
             <p className="mt-4 text-center text-xs font-extrabold text-secondary/55 sm:text-sm">
-              Tự đóng sau {noteSecondsLeft}s
+              Tự tiếp tục sau {noteSecondsLeft}s
             </p>
 
             <button
               type="button"
               onClick={finishStartNote}
-              className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-full border-2 border-secondary bg-white px-5 py-3 text-sm font-extrabold text-secondary shadow-[4px_4px_0_0_#42362E] transition-transform hover:scale-[1.02] hover:bg-stone-50 active:scale-[0.98] sm:min-h-12 sm:text-base"
+              className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-full border-2 border-secondary bg-primary px-5 py-3 text-sm font-extrabold text-white shadow-[4px_4px_0_0_#42362E] transition-transform hover:scale-[1.02] hover:bg-[#9a6b54] active:scale-[0.98] sm:min-h-12 sm:text-base"
             >
-              <X className="h-[18px] w-[18px] sm:h-5 sm:w-5" strokeWidth={2.6} />
-              Đóng
+              <ArrowRight className="h-[18px] w-[18px] sm:h-5 sm:w-5" strokeWidth={2.6} />
+              Tiếp tục
             </button>
           </motion.div>
         </div>

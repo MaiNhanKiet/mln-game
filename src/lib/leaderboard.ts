@@ -13,45 +13,56 @@ export type LeaderboardFetchResult = {
   playerRanks: LeaderboardPlayerRanks | null
 }
 
-const getStatusRank = (status: string) => {
-  if (status === 'VICTORY') {
-    return 0
+/** Win + đang chơi xếp chung theo điểm; game over luôn dưới mọi win (kể cả điểm cao hơn).
+ *  Cùng status và cùng điểm: ai cập nhật sớm hơn (updatedAt — hoàn thành câu cuối) xếp trên. */
+
+const getEntryScore = (entry: LeaderboardEntry, category: LeaderboardCategory) => entry[category]
+
+const isGameOverEntry = (entry: LeaderboardEntry) => entry.status === 'GAME_OVER'
+
+const compareByLastUpdateTime = (first: LeaderboardEntry, second: LeaderboardEntry) => {
+  const timeDiff = new Date(first.updatedAt).getTime() - new Date(second.updatedAt).getTime()
+
+  if (timeDiff !== 0) {
+    return timeDiff
   }
 
-  if (status === 'GAME_OVER') {
+  return first.id.localeCompare(second.id)
+}
+
+const compareLeaderboardEntries = (
+  first: LeaderboardEntry,
+  second: LeaderboardEntry,
+  category: LeaderboardCategory,
+) => {
+  const firstIsGameOver = isGameOverEntry(first)
+  const secondIsGameOver = isGameOverEntry(second)
+
+  if (!firstIsGameOver && secondIsGameOver) {
+    return -1
+  }
+
+  if (firstIsGameOver && !secondIsGameOver) {
     return 1
   }
 
-  return 2
-}
+  const scoreDiff = getEntryScore(second, category) - getEntryScore(first, category)
 
-const getEntryScore = (entry: LeaderboardEntry, category: LeaderboardCategory) => entry[category]
+  if (scoreDiff !== 0) {
+    return scoreDiff
+  }
+
+  if (first.status === second.status) {
+    return compareByLastUpdateTime(first, second)
+  }
+
+  return first.id.localeCompare(second.id)
+}
 
 export const sortLeaderboardEntries = (
   entries: LeaderboardEntry[],
   category: LeaderboardCategory,
-) =>
-  [...entries].sort((first, second) => {
-    const statusDiff = getStatusRank(first.status) - getStatusRank(second.status)
-
-    if (statusDiff !== 0) {
-      return statusDiff
-    }
-
-    const scoreDiff = getEntryScore(second, category) - getEntryScore(first, category)
-
-    if (scoreDiff !== 0) {
-      return scoreDiff
-    }
-
-    const timeDiff = new Date(first.createdAt).getTime() - new Date(second.createdAt).getTime()
-
-    if (timeDiff !== 0) {
-      return timeDiff
-    }
-
-    return first.id.localeCompare(second.id)
-  })
+) => [...entries].sort((first, second) => compareLeaderboardEntries(first, second, category))
 
 export const takeTopLeaderboardEntries = (
   entries: LeaderboardEntry[],

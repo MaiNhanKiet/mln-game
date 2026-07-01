@@ -1,10 +1,12 @@
 'use client'
 
+import type { CSSProperties } from 'react'
 import CountUp from 'react-countup'
 
 type AnimatedCountProps = {
   value: number
   className?: string
+  style?: CSSProperties
   duration?: number
   suffix?: string
   separator?: string
@@ -13,12 +15,13 @@ type AnimatedCountProps = {
 export function AnimatedCount({
   value,
   className,
+  style,
   duration = 0.55,
   suffix = '',
   separator = '.',
 }: AnimatedCountProps) {
   return (
-    <span className={className}>
+    <span className={className} style={style}>
       <CountUp
         end={value}
         duration={duration}

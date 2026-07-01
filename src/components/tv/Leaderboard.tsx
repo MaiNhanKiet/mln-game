@@ -1,24 +1,72 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { BriefcaseBusiness, HeartHandshake, Trophy, Users } from 'lucide-react'
 import { LayoutGroup, motion } from 'framer-motion'
+import { OutcomeTag } from '@/components/leaderboard/outcome-tag'
 import { AnimatedCount } from '@/components/ui/animated-count'
+import { TvLeaderboardSoundControls } from '@/components/tv/TvLeaderboardSoundControls'
 import { useLeaderboardRealtime } from '@/hooks/use-leaderboard-realtime'
-import type { LeaderboardCategory, LeaderboardEntry } from '@/lib/leaderboard'
+import { useLeaderboardSound } from '@/hooks/use-leaderboard-sound'
+import { sortLeaderboardEntries, type LeaderboardCategory, type LeaderboardEntry } from '@/lib/leaderboard'
+import {
+  getTvRowGridStyle,
+  getTvTrophySize,
+  TV_LB_BADGE_WIDTH,
+  TV_LB_FONT,
+  TV_LB_RANK_WIDTH,
+  TV_LB_SCORE_WIDTH,
+} from '@/lib/tv-leaderboard-typography'
+import { useTvLeaderboardSettings } from '@/stores/use-tv-leaderboard-settings'
 
 const LEADERBOARD_SIZE = 10
+const RANK_HIGHLIGHT_MS = 900
 
-const rowTransition = { type: 'spring' as const, stiffness: 520, damping: 38, mass: 0.85 }
+const rowTransition = { type: 'spring' as const, stiffness: 420, damping: 32, mass: 0.9 }
+const layoutTransition = { type: 'spring' as const, stiffness: 380, damping: 28, mass: 1 }
 
-function usePrevious<T>(value: T) {
-  const ref = useRef<T | undefined>(undefined)
+function useRankChangeTracker(
+  entries: LeaderboardEntry[],
+  onRankChange?: () => void,
+) {
+  const prevRankMapRef = useRef<Map<string, number>>(new Map())
+  const isInitialRef = useRef(true)
+  const [rankDeltas, setRankDeltas] = useState<Map<string, number>>(new Map())
 
   useEffect(() => {
-    ref.current = value
-  }, [value])
+    const nextRankMap = new Map<string, number>()
+    const deltas = new Map<string, number>()
 
-  return ref.current
+    entries.forEach((entry, index) => {
+      const rank = index + 1
+      nextRankMap.set(entry.id, rank)
+
+      const previousRank = prevRankMapRef.current.get(entry.id)
+      if (!isInitialRef.current && previousRank !== undefined && previousRank !== rank) {
+        deltas.set(entry.id, previousRank - rank)
+      }
+    })
+
+    prevRankMapRef.current = nextRankMap
+
+    if (!isInitialRef.current && deltas.size > 0) {
+      onRankChange?.()
+      setRankDeltas(deltas)
+    }
+
+    isInitialRef.current = false
+  }, [entries, onRankChange])
+
+  useEffect(() => {
+    if (rankDeltas.size === 0) {
+      return
+    }
+
+    const timer = window.setTimeout(() => setRankDeltas(new Map()), RANK_HIGHLIGHT_MS)
+    return () => window.clearTimeout(timer)
+  }, [rankDeltas])
+
+  return rankDeltas
 }
 
 type ColumnConfig = {
@@ -32,6 +80,12 @@ type ColumnConfig = {
   scoreClass: string
   scoreSuffix?: string
 }
+
+const DEFAULT_ROW_SHADOW = '2px 2px 0 0 #42362E'
+
+const RANK_COLUMN_CLASS = 'flex shrink-0 items-center justify-center'
+const BADGE_COLUMN_CLASS = 'shrink-0'
+const SCORE_COLUMN_CLASS = 'shrink-0 text-right'
 
 const columns: ColumnConfig[] = [
   {
@@ -68,28 +122,50 @@ const columns: ColumnConfig[] = [
   },
 ]
 
-const getRankStyle = (rank: number) => {
+const RANK_MOTION_MS = 0.75
+
+const RANK_UP_COLORS = {
+  bg: 'rgba(34, 197, 94, 0.28)',
+  border: 'rgb(34, 197, 94)',
+} as const
+
+const RANK_DOWN_COLORS = {
+  bg: 'rgba(239, 68, 68, 0.24)',
+  border: 'rgb(239, 68, 68)',
+} as const
+
+const getRankColors = (rank: number) => {
   if (rank === 1) {
-    return 'border-[#D4AF37] bg-[#FFF9E6]'
+    return { bg: '#FFF9E6', border: '#D4AF37' }
   }
+
   if (rank === 2) {
-    return 'border-[#A7A9AC] bg-white'
+    return { bg: '#FFFFFF', border: '#A7A9AC' }
   }
+
   if (rank === 3) {
-    return 'border-[#B87333] bg-[#FFF8F0]'
+    return { bg: '#FFF8F0', border: '#B87333' }
   }
-  return 'border-secondary/80 bg-white/95'
+
+  return { bg: 'rgba(255, 255, 255, 0.95)', border: 'rgba(66, 54, 46, 0.8)' }
 }
 
-function AwardTrophy({ rank }: { rank: number }) {
+const getRowShadow = (rank: number, borderColor: string) =>
+  rank <= 3 ? `1px 1px 0 0 ${borderColor}, 2px 2px 0 0 #42362E` : DEFAULT_ROW_SHADOW
+
+function AwardTrophy({ rank, size }: { rank: number; size: number }) {
   if (rank > 3) {
-    return <span className="whitespace-nowrap text-[10px] font-black text-secondary/45 sm:text-xs">#{rank}</span>
+    return (
+      <span className="whitespace-nowrap font-black text-secondary/45" style={TV_LB_FONT.rowRank}>
+        #{rank}
+      </span>
+    )
   }
 
   const className =
     rank === 1 ? 'text-[#D4AF37]' : rank === 2 ? 'text-[#A7A9AC]' : 'text-[#B87333]'
 
-  return <Trophy className={className} size={16} fill="currentColor" strokeWidth={2.4} />
+  return <Trophy className={className} size={size} fill="currentColor" strokeWidth={2.4} />
 }
 
 type RankItemProps = {
@@ -97,70 +173,96 @@ type RankItemProps = {
   rank: number
   category: LeaderboardCategory
   config: ColumnConfig
+  rankDelta?: number
+  isReordering?: boolean
+  trophySize: number
 }
 
-function RankItem({ entry, rank, category, config }: RankItemProps) {
+function RankItem({
+  entry,
+  rank,
+  category,
+  config,
+  rankDelta = 0,
+  isReordering = false,
+  trophySize,
+}: RankItemProps) {
   const score = entry[category]
-  const prevScore = usePrevious(score)
-  const scoreDelta = prevScore === undefined ? 0 : score - prevScore
+  const movedUp = rankDelta > 0
+  const movedDown = rankDelta < 0
+  const hasRankChange = rankDelta !== 0
+  const idleColors = getRankColors(rank)
+  const rowShadow = getRowShadow(rank, idleColors.border)
+  const rankMotionTransition = {
+    duration: RANK_MOTION_MS,
+    times: [0, 0.38, 1] as [number, number, number],
+    ease: 'easeOut' as const,
+  }
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -8, scale: 0.98 }}
+      layout
+      initial={{ opacity: 0, y: -6, scale: 0.99 }}
       animate={{
         opacity: 1,
-        y: 0,
-        scale: 1,
-        boxShadow:
-          scoreDelta !== 0
-            ? '2px 2px 0 0 #42362E, 0 0 0 2px rgba(176, 125, 98, 0.35)'
-            : '2px 2px 0 0 #42362E',
+        y: movedUp ? [0, -12, 0] : movedDown ? [0, 8, 0] : 0,
+        scale: hasRankChange ? [1, 1.03, 1] : isReordering ? 1.01 : 1,
+        backgroundColor: hasRankChange
+          ? movedUp
+            ? [idleColors.bg, RANK_UP_COLORS.bg, idleColors.bg]
+            : [idleColors.bg, RANK_DOWN_COLORS.bg, idleColors.bg]
+          : idleColors.bg,
+        borderColor: hasRankChange
+          ? movedUp
+            ? [idleColors.border, RANK_UP_COLORS.border, idleColors.border]
+            : [idleColors.border, RANK_DOWN_COLORS.border, idleColors.border]
+          : idleColors.border,
       }}
       transition={{
-        opacity: { duration: 0.28 },
-        y: { duration: 0.28 },
-        scale: { duration: 0.28 },
-        boxShadow: { duration: 0.45 },
+        layout: layoutTransition,
+        opacity: { duration: 0.22 },
+        y: hasRankChange ? rankMotionTransition : { duration: 0.22 },
+        scale: hasRankChange ? rankMotionTransition : { type: 'spring', stiffness: 500, damping: 32 },
+        backgroundColor: hasRankChange ? rankMotionTransition : { duration: 0.2 },
+        borderColor: hasRankChange ? rankMotionTransition : { duration: 0.2 },
       }}
-      className={`box-border grid h-full w-full min-h-0 grid-cols-[1.75rem_minmax(0,1fr)_auto] items-center gap-1.5 rounded-lg border-2 px-2 py-1 sm:grid-cols-[2rem_minmax(0,1fr)_auto] sm:gap-2 sm:px-2.5 sm:py-1.5 ${getRankStyle(rank)}`}
+      className="box-border grid h-full w-full min-h-0 overflow-visible rounded-md border-2 items-center gap-x-1 gap-y-0 px-1.5 py-1 sm:gap-x-1.5 sm:px-2 sm:py-1.5"
+      style={{ ...getTvRowGridStyle(), boxShadow: rowShadow }}
     >
       <motion.span
         key={`rank-${rank}`}
-        className="flex items-center justify-center"
-        initial={{ scale: 0.7, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={rowTransition}
+        className={RANK_COLUMN_CLASS}
+        style={{ width: TV_LB_RANK_WIDTH }}
+        initial={{ scale: 0.85, opacity: 0 }}
+        animate={{
+          scale: hasRankChange ? [1, 1.12, 1] : 1,
+          opacity: 1,
+        }}
+        transition={{
+          ...rowTransition,
+          scale: hasRankChange ? { duration: 0.4, times: [0, 0.4, 1] } : rowTransition,
+        }}
       >
-        <AwardTrophy rank={rank} />
+        <AwardTrophy rank={rank} size={trophySize} />
       </motion.span>
-      <span className="flex min-w-0 items-center gap-1.5">
-        {entry.status === 'PLAYING' ? (
-          <span
-            className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-success"
-            title="Đang chơi"
-            aria-hidden
-          />
-        ) : entry.status === 'VICTORY' ? (
-          <span className="shrink-0 text-[9px] font-black text-success" title="Đã hoàn thành">
-            ✓
-          </span>
-        ) : (
-          <span className="shrink-0 text-[9px] font-black text-secondary/35" title="Đã chơi">
-            •
-          </span>
-        )}
-        <span
-          className="truncate whitespace-nowrap text-[11px] font-extrabold text-secondary sm:text-sm"
-          title={entry.playerName}
-        >
-          {entry.playerName}
-        </span>
+      <span
+        className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-extrabold leading-snug text-secondary"
+        style={{ ...TV_LB_FONT.rowName, lineHeight: 1.35 }}
+        title={entry.playerName}
+      >
+        {entry.playerName}
       </span>
-      <AnimatedCount
-        value={score}
-        suffix={config.scoreSuffix}
-        className={`shrink-0 whitespace-nowrap text-[11px] font-black tabular-nums sm:text-sm ${config.scoreClass}`}
-      />
+      <span className={BADGE_COLUMN_CLASS} style={{ width: TV_LB_BADGE_WIDTH }}>
+        <OutcomeTag status={entry.status} tvScaled />
+      </span>
+      <span className={SCORE_COLUMN_CLASS} style={{ width: TV_LB_SCORE_WIDTH }}>
+        <AnimatedCount
+          value={score}
+          suffix={config.scoreSuffix}
+          className={`whitespace-nowrap font-black tabular-nums leading-snug ${config.scoreClass}`}
+          style={{ ...TV_LB_FONT.rowScore, lineHeight: 1.35 }}
+        />
+      </span>
     </motion.div>
   )
 }
@@ -168,7 +270,7 @@ function RankItem({ entry, rank, category, config }: RankItemProps) {
 function EmptySlot() {
   return (
     <div
-      className="box-border h-full w-full min-h-0 rounded-lg border-2 border-dashed border-secondary/15 bg-white/40"
+      className="box-border h-full w-full min-h-0 rounded-md border border-dashed border-secondary/15 bg-white/40"
       aria-hidden
     />
   )
@@ -178,18 +280,42 @@ type LeaderboardColumnProps = {
   config: ColumnConfig
   entries: LeaderboardEntry[]
   isLoading: boolean
+  onRankChange?: () => void
+  trophySize: number
 }
 
-function LeaderboardColumn({ config, entries, isLoading }: LeaderboardColumnProps) {
+function LeaderboardColumn({ config, entries, isLoading, onRankChange, trophySize }: LeaderboardColumnProps) {
   const Icon = config.icon
-  const slots = Array.from({ length: LEADERBOARD_SIZE }, (_, index) => entries[index] ?? null)
+  const sortedEntries = useMemo(
+    () => sortLeaderboardEntries(entries, config.id),
+    [entries, config.id],
+  )
+  const slots = Array.from({ length: LEADERBOARD_SIZE }, (_, index) => sortedEntries[index] ?? null)
+  const rankDeltas = useRankChangeTracker(sortedEntries, onRankChange)
+  const [reorderingIds, setReorderingIds] = useState<Set<string>>(new Set())
+
+  const handleLayoutAnimationStart = useCallback((id: string) => {
+    setReorderingIds((current) => {
+      const next = new Set(current)
+      next.add(id)
+      return next
+    })
+  }, [])
+
+  const handleLayoutAnimationComplete = useCallback((id: string) => {
+    setReorderingIds((current) => {
+      const next = new Set(current)
+      next.delete(id)
+      return next
+    })
+  }, [])
 
   return (
     <section
-      className={`box-border flex min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl border-2 border-secondary shadow-[3px_3px_0_0_#42362E] ${config.panelClass}`}
+      className={`box-border flex min-h-0 min-w-0 flex-col rounded-2xl border-2 border-secondary shadow-[3px_3px_0_0_#42362E] ${config.panelClass}`}
     >
       <header
-        className={`relative shrink-0 overflow-visible rounded-t-2xl border-b-2 border-secondary/15 bg-gradient-to-b ${config.headerAccent} px-3 py-3 sm:px-4 sm:py-3.5`}
+        className={`relative shrink-0 overflow-hidden rounded-t-2xl border-b-2 border-secondary/15 bg-gradient-to-b ${config.headerAccent} px-3 py-3 sm:px-4 sm:py-3.5`}
       >
         <div className="flex flex-col items-center text-center">
           <div className="mb-2 flex justify-center pr-1 pb-1 sm:mb-2.5">
@@ -201,44 +327,109 @@ function LeaderboardColumn({ config, entries, isLoading }: LeaderboardColumnProp
           </div>
 
           <h2
-            className="font-display text-base font-extrabold leading-tight tracking-tight text-secondary sm:text-lg lg:text-xl"
+            className="font-display font-extrabold leading-tight tracking-tight text-secondary"
+            style={TV_LB_FONT.columnTitle}
             title={config.title}
           >
             {config.title}
           </h2>
 
-          <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.14em] text-secondary/55 sm:text-xs sm:tracking-[0.16em]">
+          <p
+            className="mt-1 font-bold uppercase tracking-[0.14em] text-secondary/55 sm:tracking-[0.16em]"
+            style={TV_LB_FONT.columnDescription}
+          >
             {config.description}
           </p>
         </div>
       </header>
 
       <LayoutGroup id={config.id}>
-        <div className="grid min-h-0 flex-1 grid-rows-10 gap-1.5 p-2 pb-2.5 pr-2.5 sm:gap-1.5 sm:p-2.5 sm:pb-3 sm:pr-3">
+        <div className="flex min-h-0 flex-1 flex-col gap-1 p-2 pb-2.5 sm:gap-1.5 sm:p-2.5 sm:pb-3">
+          {!isLoading && sortedEntries.length > 0 ? (
+            <div
+              className={`grid shrink-0 items-center gap-x-1 px-1.5 sm:gap-x-1.5 sm:px-2`}
+              style={getTvRowGridStyle()}
+              aria-hidden
+            >
+              <span
+                className={`${RANK_COLUMN_CLASS} font-bold uppercase text-secondary/35`}
+                style={{ ...TV_LB_FONT.columnHeaderLabel, width: TV_LB_RANK_WIDTH }}
+              >
+                #
+              </span>
+              <span
+                className="truncate font-bold uppercase tracking-wide text-secondary/35"
+                style={TV_LB_FONT.columnHeaderLabel}
+              >
+                Tên
+              </span>
+              <span
+                className={`${BADGE_COLUMN_CLASS} text-center font-bold uppercase tracking-wide text-secondary/35`}
+                style={{ ...TV_LB_FONT.columnHeaderLabel, width: TV_LB_BADGE_WIDTH }}
+              >
+                TT
+              </span>
+              <span
+                className={`${SCORE_COLUMN_CLASS} font-bold uppercase tracking-wide text-secondary/35`}
+                style={{ ...TV_LB_FONT.columnHeaderLabel, width: TV_LB_SCORE_WIDTH }}
+              >
+                Điểm
+              </span>
+            </div>
+          ) : null}
+
+          <div className="grid min-h-0 flex-1 grid-rows-10 gap-1 overflow-visible p-px sm:gap-1.5">
           {isLoading ? (
-            <p className="col-span-full row-span-10 flex items-center justify-center text-sm font-bold text-secondary/55">
+            <p
+              className="col-span-full row-span-10 flex items-center justify-center font-bold text-secondary/55"
+              style={TV_LB_FONT.statusMessage}
+            >
               Đang tải...
             </p>
-          ) : entries.length > 0 ? (
+          ) : sortedEntries.length > 0 ? (
             slots.map((entry, index) => (
               <motion.div
                 key={entry?.id ?? `empty-${index}`}
                 layout="position"
-                transition={rowTransition}
-                className="flex min-h-0 min-w-0 items-stretch"
+                layoutId={entry ? `${config.id}-${entry.id}` : undefined}
+                transition={layoutTransition}
+                onLayoutAnimationStart={() => {
+                  if (entry) {
+                    handleLayoutAnimationStart(entry.id)
+                  }
+                }}
+                onLayoutAnimationComplete={() => {
+                  if (entry) {
+                    handleLayoutAnimationComplete(entry.id)
+                  }
+                }}
+                style={{ zIndex: entry && (rankDeltas.has(entry.id) || reorderingIds.has(entry.id)) ? 12 : 1 }}
+                className="flex min-h-0 min-w-0 items-stretch overflow-visible"
               >
                 {entry ? (
-                  <RankItem entry={entry} rank={index + 1} category={config.id} config={config} />
+                  <RankItem
+                    entry={entry}
+                    rank={index + 1}
+                    category={config.id}
+                    config={config}
+                    rankDelta={rankDeltas.get(entry.id) ?? 0}
+                    isReordering={reorderingIds.has(entry.id)}
+                    trophySize={trophySize}
+                  />
                 ) : (
                   <EmptySlot />
                 )}
               </motion.div>
             ))
           ) : (
-            <p className="col-span-full row-span-10 flex items-center justify-center text-sm font-bold text-secondary/55">
+            <p
+              className="col-span-full row-span-10 flex items-center justify-center font-bold text-secondary/55"
+              style={TV_LB_FONT.statusMessage}
+            >
               Chưa có dữ liệu
             </p>
           )}
+          </div>
         </div>
       </LayoutGroup>
     </section>
@@ -246,32 +437,49 @@ function LeaderboardColumn({ config, entries, isLoading }: LeaderboardColumnProp
 }
 
 export function Leaderboard() {
-  const { data, isLoading, isLive } = useLeaderboardRealtime()
+  const { data, isLoading } = useLeaderboardRealtime()
+  const { playRankChangeSound, previewLeaderboardSound } = useLeaderboardSound()
+  const fontScale = useTvLeaderboardSettings((s) => s.fontScale)
+  const soundCooldownRef = useRef(false)
+  const trophySize = getTvTrophySize(fontScale)
+
+  const handleRankChange = useCallback(() => {
+    if (soundCooldownRef.current) {
+      return
+    }
+
+    soundCooldownRef.current = true
+    playRankChangeSound()
+
+    window.setTimeout(() => {
+      soundCooldownRef.current = false
+    }, 280)
+  }, [playRankChangeSound])
 
   return (
-    <main className="box-border h-dvh w-full overflow-hidden bg-[#F3EFE8] p-2.5 font-sans text-secondary sm:p-3.5">
+    <main
+      className="box-border h-dvh w-full overflow-hidden bg-[#F3EFE8] p-2.5 font-sans text-secondary sm:p-3.5"
+      style={{ '--tv-lb-scale': fontScale } as CSSProperties}
+    >
+      <TvLeaderboardSoundControls onPreview={previewLeaderboardSound} />
+
       <div className="mx-auto flex h-full w-full max-w-[1920px] min-h-0 flex-col gap-2.5 sm:gap-3">
-        <header className="relative shrink-0 px-2 py-1 sm:px-3 sm:py-1.5">
+        <header className="relative shrink-0 px-2 py-0.5 sm:px-3 sm:py-1">
           <div className="flex flex-col items-center text-center">
-            <p className="inline-flex items-center gap-1.5 text-[8px] font-semibold uppercase tracking-[0.16em] text-secondary/50 sm:text-[9px]">
-              <span
-                className={`inline-block h-1.5 w-1.5 rounded-full ${isLive ? 'animate-pulse bg-success' : 'bg-secondary/20'}`}
-                aria-hidden
-              />
-              Bảng xếp hạng realtime
+            <p className="mb-0.5 font-medium text-secondary/45" style={TV_LB_FONT.pageSubtitle}>
+              Cập nhật trực tiếp từ các nhà tư bản đang khởi nghiệp
             </p>
 
-            <h1 className="mt-1 font-display text-3xl font-extrabold leading-none tracking-tight text-secondary sm:mt-1.5 sm:text-5xl lg:text-6xl">
+            <h1
+              className="font-display font-extrabold leading-tight tracking-tight text-secondary"
+              style={TV_LB_FONT.pageTitle}
+            >
               Bảng{' '}
               <span className="bg-gradient-to-r from-[#D4AF37] via-[#C9A227] to-[#B8860B] bg-clip-text text-transparent">
                 Vàng
               </span>{' '}
               Tư Bản
             </h1>
-
-            <p className="mt-1 text-[8px] font-medium text-secondary/45 sm:text-[9px]">
-              Cập nhật trực tiếp từ các nhà tư bản đang khởi nghiệp
-            </p>
           </div>
         </header>
 
@@ -282,6 +490,8 @@ export function Leaderboard() {
               config={config}
               entries={data[config.id]}
               isLoading={isLoading}
+              onRankChange={handleRankChange}
+              trophySize={trophySize}
             />
           ))}
         </div>

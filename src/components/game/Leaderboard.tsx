@@ -8,6 +8,7 @@ import { formatCapitalUnits } from '@/lib/number-format'
 import { hasCompletedPlaySession } from '@/lib/play-session'
 import { useLeaderboardRealtime } from '@/hooks/use-leaderboard-realtime'
 import { sortLeaderboardEntries, type LeaderboardCategory, type LeaderboardEntry } from '@/lib/leaderboard'
+import { OutcomeTag } from '@/components/leaderboard/outcome-tag'
 
 type LeaderboardProps = {
   state: GameState
@@ -57,18 +58,6 @@ const getEntryScore = (entry: LeaderboardEntry, category: LeaderboardCategory) =
 const formatScore = (value: number, category: LeaderboardCategory) =>
   category === 'capital' ? formatCapitalUnits(value) : `${value}/100`
 
-const getOutcomeLabel = (status: string) => {
-  if (status === 'VICTORY') {
-    return 'Win'
-  }
-
-  if (status === 'GAME_OVER') {
-    return 'Game over'
-  }
-
-  return 'Đang chơi'
-}
-
 const getAwardTier = (index: number): AwardTier | null => {
   return index < 3 ? ((index + 1) as AwardTier) : null
 }
@@ -97,25 +86,6 @@ const STATUS_BADGE_COLUMN_CLASS = 'w-[4.75rem] shrink-0'
 const SCORE_COLUMN_CLASS = 'w-14 shrink-0 text-right'
 const LEADERBOARD_ROW_GRID_CLASS =
   'grid w-full min-w-0 grid-cols-[2.75rem_minmax(0,1fr)_4.75rem_3.5rem] items-center gap-x-1.5 overflow-hidden sm:gap-x-2'
-
-function OutcomeTag({ status }: { status: string }) {
-  const isVictory = status === 'VICTORY'
-  const isGameOver = status === 'GAME_OVER'
-
-  return (
-    <span
-      className={`flex h-6 w-full items-center justify-center whitespace-nowrap rounded-pill border px-1.5 text-center text-[9px] font-extrabold uppercase leading-none tracking-wide sm:px-2 sm:text-[10px] ${
-        isVictory
-          ? 'border-success/30 bg-success/10 text-success'
-          : isGameOver
-            ? 'border-danger bg-danger text-white'
-            : 'border-secondary/20 bg-secondary/10 text-secondary/70'
-      }`}
-    >
-      {getOutcomeLabel(status)}
-    </span>
-  )
-}
 
 function TruncatablePlayerName({
   name,
