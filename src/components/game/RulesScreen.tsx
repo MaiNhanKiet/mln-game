@@ -143,23 +143,23 @@ export function RulesScreen({ onStart }: RulesScreenProps) {
   }
 
   return (
-    <div className="flex min-h-dvh items-stretch justify-center bg-[#F8F5E9] px-3 py-3 font-sans sm:items-center sm:px-4 sm:py-6 md:px-6">
+    <div className="flex min-h-dvh items-stretch justify-center bg-[#F8F5E9] px-3 py-3 font-sans sm:items-center sm:px-4 sm:py-6 md:px-6 lg:px-8 lg:py-8">
       <motion.div
-        className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center sm:max-w-lg md:max-w-xl lg:max-w-2xl"
+        className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center sm:max-w-lg lg:max-w-xl"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
         <motion.article
           variants={itemVariants}
-          className="flex max-h-[calc(100dvh-1.5rem)] flex-col overflow-hidden rounded-2xl bg-white shadow-[0_20px_60px_rgba(66,54,46,0.12)] ring-1 ring-stone-200/80 sm:max-h-[calc(100dvh-3rem)] sm:rounded-3xl"
+          className="flex max-h-[calc(100dvh-1.5rem)] flex-col overflow-hidden rounded-2xl bg-white shadow-[0_20px_60px_rgba(66,54,46,0.12)] ring-1 ring-stone-200/80 sm:max-h-[calc(100dvh-3rem)] sm:rounded-3xl lg:max-h-[min(92dvh,44rem)]"
         >
           <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6 sm:py-6 md:px-8 md:py-7">
             <motion.header variants={itemVariants} className="text-center">
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary sm:text-xs sm:tracking-[0.2em]">
                 Tinder của Nhà Tư Bản
               </p>
-              <h1 className="mt-1.5 font-display text-2xl font-extrabold leading-tight text-secondary sm:mt-2 sm:text-3xl md:text-4xl">
+              <h1 className="mt-1.5 font-display text-2xl font-extrabold leading-tight text-secondary sm:mt-2 sm:text-3xl lg:text-4xl">
                 Luật Chơi Khởi Nghiệp
               </h1>
             </motion.header>
@@ -248,7 +248,7 @@ export function RulesScreen({ onStart }: RulesScreenProps) {
                 maxLength={32}
                 enterKeyHint="done"
                 autoComplete="nickname"
-                className="h-11 w-full rounded-full border-2 border-stone-200 bg-white px-4 text-base font-semibold text-secondary outline-none transition placeholder:text-secondary/40 focus:border-primary focus:ring-4 focus:ring-primary/15 sm:h-12 sm:px-5"
+                className="h-11 w-full rounded-full border-2 border-stone-200 bg-white px-4 text-base font-semibold text-secondary outline-none transition placeholder:text-secondary/40 focus:border-primary focus:ring-4 focus:ring-primary/15 sm:h-12 sm:px-5 lg:h-12 lg:text-lg"
               />
             </label>
 
@@ -283,7 +283,7 @@ export function RulesScreen({ onStart }: RulesScreenProps) {
             initial={{ opacity: 0, scale: 0.94, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            className="w-full max-w-sm rounded-2xl border-2 border-primary/25 bg-white p-5 shadow-[0_20px_60px_rgba(66,54,46,0.18)] sm:max-w-md sm:p-6"
+            className="w-full max-w-sm rounded-2xl border-2 border-primary/25 bg-white p-5 shadow-[0_20px_60px_rgba(66,54,46,0.18)] sm:max-w-md sm:p-6 lg:max-w-lg lg:p-7"
           >
             <div className="flex items-start gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">

@@ -117,7 +117,7 @@ export function SoundSettingsPanel({
       />
 
       <aside
-        className="fixed right-2 top-14 z-50 w-[min(100vw-1rem,20rem)] rounded-2xl border-2 border-secondary bg-white p-4 shadow-[4px_4px_0_0_#42362E] sm:right-4 sm:top-16"
+        className="fixed right-2 top-14 z-50 w-[min(100vw-1rem,20rem)] rounded-2xl border-2 border-secondary bg-white p-4 shadow-[4px_4px_0_0_#42362E] sm:right-4 sm:top-16 lg:right-6 lg:top-[4.5rem] lg:w-80 lg:p-5"
         aria-label="Cài đặt âm thanh"
       >
         <div className="mb-4 flex items-center justify-between gap-2">
@@ -235,10 +235,10 @@ export function GameSoundControls({ onPreviewSuccess, onPreviewFail }: GameSound
 
   return (
     <>
-      <div className="fixed right-2 top-2 z-50 flex items-center gap-2 sm:right-4 sm:top-4">
+      <div className="fixed right-2 top-2 z-50 flex items-center gap-2 sm:right-4 sm:top-4 lg:right-6 lg:top-6">
         <button
           type="button"
-          className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-secondary bg-white text-secondary shadow-[3px_3px_0_0_#42362E] transition hover:-translate-y-0.5 hover:bg-background active:scale-95 sm:h-11 sm:w-11"
+          className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-secondary bg-white text-secondary shadow-[3px_3px_0_0_#42362E] transition hover:-translate-y-0.5 hover:bg-background active:scale-95 sm:h-11 sm:w-11 lg:h-12 lg:w-12"
           onClick={() => setOpen((current) => !current)}
           aria-label="Cài đặt âm thanh"
           title="Cài đặt âm thanh"
@@ -248,7 +248,7 @@ export function GameSoundControls({ onPreviewSuccess, onPreviewFail }: GameSound
 
         <button
           type="button"
-          className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-secondary bg-white text-secondary shadow-[3px_3px_0_0_#42362E] transition hover:-translate-y-0.5 hover:bg-background active:scale-95 sm:h-11 sm:w-11"
+          className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-secondary bg-white text-secondary shadow-[3px_3px_0_0_#42362E] transition hover:-translate-y-0.5 hover:bg-background active:scale-95 sm:h-11 sm:w-11 lg:h-12 lg:w-12"
           onClick={handleQuickMute}
           aria-label={isAnySoundOn ? 'Tắt tất cả âm thanh' : 'Bật âm thanh'}
           title={isAnySoundOn ? 'Tắt tất cả âm thanh' : 'Bật âm thanh'}

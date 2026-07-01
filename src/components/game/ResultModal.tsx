@@ -21,10 +21,10 @@ type ResultModalProps = {
 }
 
 const BLOCK_SECTION_BASE =
-  'flex flex-col rounded-xl border border-secondary/15 bg-background p-2.5 sm:p-3'
+  'flex flex-col rounded-xl border border-secondary/15 bg-background p-2.5 sm:p-3 lg:p-4'
 const METRICS_SECTION_CLASS = `${BLOCK_SECTION_BASE} shrink-0`
 const FEEDBACK_SECTION_CLASS = `${BLOCK_SECTION_BASE} min-h-0 flex-1`
-const BLOCK_BODY_TEXT_CLASS = 'text-xs font-semibold leading-5 text-secondary/75 sm:text-sm sm:leading-6'
+const BLOCK_BODY_TEXT_CLASS = 'text-xs font-semibold leading-5 text-secondary/75 sm:text-sm sm:leading-6 lg:text-base lg:leading-7'
 
 const metricLabels: Partial<Record<MetricKey, string>> = {
   capital: 'Vốn tích lũy',
@@ -142,8 +142,8 @@ export function ResultModal({ result, onContinue, continueLabel = 'Tiếp tục'
   return (
     <>
       <section className="flex h-full min-h-0 w-full flex-col">
-        <article className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-secondary/15 bg-white p-2.5 sm:p-3">
-          <div className="mb-2.5 shrink-0 sm:mb-3">
+        <article className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-secondary/15 bg-white p-2.5 sm:p-3 lg:p-4 xl:p-5">
+          <div className="mb-2.5 shrink-0 sm:mb-3 lg:mb-4">
             <div className="flex items-start justify-between gap-2.5">
               <div className="min-w-0 flex-1">
                 <p className="text-[11px] font-extrabold uppercase leading-none tracking-[0.1em] sm:text-xs">
@@ -151,7 +151,7 @@ export function ResultModal({ result, onContinue, continueLabel = 'Tiếp tục'
                   <span className="text-secondary/55">{swipeLabel}</span>
                 </p>
 
-                <h2 className="mt-1.5 font-display text-xl font-extrabold leading-[1.1] text-secondary sm:mt-2 sm:text-2xl">
+                <h2 className="mt-1.5 font-display text-xl font-extrabold leading-[1.1] text-secondary sm:mt-2 sm:text-2xl lg:text-3xl">
                   {title}
                 </h2>
               </div>
@@ -173,7 +173,7 @@ export function ResultModal({ result, onContinue, continueLabel = 'Tiếp tục'
                 <h3 className="text-xs font-extrabold text-secondary sm:text-sm">Thay đổi chỉ số</h3>
               </div>
 
-              <div className="grid grid-cols-1 gap-1.5">
+              <div className="grid grid-cols-1 gap-1.5 lg:grid-cols-2 lg:gap-2">
                 {impactRows.length > 0 ? (
                   impactRows.map((row) => {
                     const isPositive = row.value > 0
@@ -181,7 +181,7 @@ export function ResultModal({ result, onContinue, continueLabel = 'Tiếp tục'
                     return (
                       <div
                         key={row.key}
-                        className={`flex min-h-8 items-center justify-between gap-2 rounded-xl border border-secondary/15 px-2.5 py-1.5 sm:min-h-9 sm:px-3 ${
+                        className={`flex min-h-8 items-center justify-between gap-2 rounded-xl border border-secondary/15 px-2.5 py-1.5 sm:min-h-9 sm:px-3 lg:min-h-10 lg:px-3.5 ${
                           isPositive ? 'bg-emerald-50/80' : 'bg-red-50/80'
                         }`}
                       >
@@ -247,7 +247,7 @@ export function ResultModal({ result, onContinue, continueLabel = 'Tiếp tục'
           {!showEndingPopup ? (
             <button
               type="button"
-              className="mt-2 inline-flex min-h-10 w-full shrink-0 items-center justify-center gap-2 rounded-full border border-secondary/20 bg-primary px-3 py-2 text-sm font-extrabold text-white transition hover:bg-[#9a6b54] active:scale-[0.98] sm:min-h-11 sm:text-base"
+              className="mt-2 inline-flex min-h-10 w-full shrink-0 items-center justify-center gap-2 rounded-full border border-secondary/20 bg-primary px-3 py-2 text-sm font-extrabold text-white transition hover:bg-[#9a6b54] active:scale-[0.98] sm:min-h-11 sm:text-base lg:min-h-12 lg:text-lg"
               onClick={onContinue}
             >
               <SmilePlus className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2.5} />
@@ -275,7 +275,7 @@ export function ResultModal({ result, onContinue, continueLabel = 'Tiếp tục'
               role="dialog"
               aria-modal="true"
               aria-labelledby="feedback-sheet-title"
-              className="fixed left-1/2 z-[80] flex w-[min(100vw-1.5rem,24rem)] max-h-[min(72dvh,28rem)] -translate-x-1/2 flex-col overflow-hidden rounded-2xl border border-secondary/15 bg-white shadow-[0_24px_60px_rgba(66,54,46,0.18)]"
+              className="fixed left-1/2 z-[80] flex w-[min(100vw-1.5rem,24rem)] max-h-[min(72dvh,28rem)] -translate-x-1/2 flex-col overflow-hidden rounded-2xl border border-secondary/15 bg-white shadow-[0_24px_60px_rgba(66,54,46,0.18)] lg:w-[min(100vw-2rem,28rem)] lg:max-h-[min(75dvh,32rem)]"
               style={{ top: '50%' }}
               initial={{ y: '55vh', opacity: 0 }}
               animate={{ y: '-50%', opacity: 1 }}
@@ -325,7 +325,7 @@ export function ResultModal({ result, onContinue, continueLabel = 'Tiếp tục'
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 8 }}
               transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-              className="flex max-h-[min(82dvh,32rem)] w-full max-w-sm flex-col overflow-hidden rounded-2xl border border-secondary/15 bg-white shadow-[0_24px_60px_rgba(66,54,46,0.18)] sm:max-w-md"
+              className="flex max-h-[min(82dvh,32rem)] w-full max-w-sm flex-col overflow-hidden rounded-2xl border border-secondary/15 bg-white shadow-[0_24px_60px_rgba(66,54,46,0.18)] sm:max-w-md lg:max-w-lg xl:max-w-xl"
             >
               <div className="flex shrink-0 items-start gap-3 border-b border-secondary/10 px-5 py-4 sm:px-6">
                 <span

@@ -47,17 +47,17 @@ export function GamePrototype() {
   }, [state.phase])
 
   useEffect(() => {
-    if (!isLeaderboardView) {
+    if (!isSwipeView) {
       return
     }
 
     const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = ''
+    document.body.style.overflow = 'hidden'
 
     return () => {
       document.body.style.overflow = previousOverflow
     }
-  }, [isLeaderboardView])
+  }, [isSwipeView])
 
   useEffect(() => {
     if (!isLeaderboardView || !state.gameRunId) {
@@ -70,19 +70,6 @@ export function GamePrototype() {
 
     void syncPlayerState(getPlayerStatusFromPhase(state.phase))
   }, [isLeaderboardView, state.gameRunId, state.phase])
-
-  useEffect(() => {
-    if (!isSwipeView) {
-      return
-    }
-
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-
-    return () => {
-      document.body.style.overflow = previousOverflow
-    }
-  }, [isSwipeView])
 
   useEffect(() => {
     if (!state.pendingResult) {
@@ -203,32 +190,42 @@ export function GamePrototype() {
   }
 
   return (
-    <main className="flex h-dvh flex-col overflow-hidden bg-background px-3 py-3 font-sans text-secondary sm:px-4 sm:py-4">
+    <main
+      className={`flex flex-col bg-background px-3 py-3 font-sans text-secondary sm:px-4 sm:py-4 lg:px-6 lg:py-5 xl:px-8 ${
+        isLeaderboardView ? 'min-h-dvh' : 'h-dvh overflow-hidden'
+      }`}
+    >
       {soundControls}
 
-      <section className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col gap-3 sm:max-w-xl">
+      <section
+        className={`mx-auto flex w-full max-w-md flex-col gap-3 sm:max-w-xl lg:max-w-2xl lg:gap-4 xl:max-w-3xl ${
+          isLeaderboardView ? '' : 'min-h-0 flex-1'
+        }`}
+      >
         {!isLeaderboardView ? (
-          <header className="shrink-0 overflow-visible rounded-game bg-white/90 p-3 shadow-hud ring-1 ring-primary/20 backdrop-blur sm:p-4">
-            <p className="text-center text-[11px] font-bold uppercase tracking-wide text-primary sm:text-xs">
+          <header className="shrink-0 overflow-visible rounded-game bg-white/90 p-3 shadow-hud ring-1 ring-primary/20 backdrop-blur sm:p-4 lg:p-5">
+            <p className="text-center text-[11px] font-bold uppercase tracking-wide text-primary sm:text-xs lg:text-sm">
               {displayedShopName}
             </p>
-            <h1 className="text-center font-display text-xl font-bold leading-tight text-secondary sm:text-2xl">
+            <h1 className="text-center font-display text-xl font-bold leading-tight text-secondary sm:text-2xl lg:text-3xl">
               &ldquo;Tinder&rdquo; của Nhà Tư Bản
             </h1>
-            <div className="mt-2 sm:mt-3">
+            <div className="mt-2 sm:mt-3 lg:mt-4">
               <StatsHud state={state} />
             </div>
           </header>
         ) : null}
 
         <section
-          className={`flex min-h-0 flex-1 flex-col ${
+          className={`${
+            isLeaderboardView ? 'rounded-game bg-background ring-1 ring-secondary/10' : 'flex min-h-0 flex-1 flex-col'
+          } ${
             isResultView || isLeaderboardView
               ? 'p-0'
-              : 'rounded-game bg-white p-3 shadow-soft ring-1 ring-secondary/10 sm:p-4'
+              : 'rounded-game bg-white p-3 shadow-soft ring-1 ring-secondary/10 sm:p-4 lg:p-5'
           } ${
             isLeaderboardView
-              ? 'overflow-hidden'
+              ? ''
               : isScrollableView
                 ? 'overflow-y-auto overscroll-contain'
                 : 'overflow-hidden'

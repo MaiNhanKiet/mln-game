@@ -76,7 +76,7 @@ export function ScoreBar({
   const Icon = classes.Icon
 
   return (
-    <article className="relative flex h-full min-h-[4.9rem] flex-col overflow-hidden rounded-xl border-2 border-secondary bg-white p-1.5 shadow-[3px_3px_0_0_#42362E] transition-transform hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_#42362E] min-[390px]:min-h-[5.35rem] min-[390px]:p-2 min-[720px]:min-h-[7rem] min-[720px]:rounded-2xl min-[720px]:p-2.5">
+    <article className="relative flex h-full min-h-[4.9rem] flex-col overflow-hidden rounded-xl border-2 border-secondary bg-white p-1.5 shadow-[3px_3px_0_0_#42362E] transition-transform hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_#42362E] min-[390px]:min-h-[5.35rem] min-[390px]:p-2 min-[720px]:min-h-[7rem] min-[720px]:rounded-2xl min-[720px]:p-2.5 lg:min-h-[7.5rem] lg:p-3 xl:min-h-[8rem]">
       <div className={`absolute -right-3 -top-3 h-11 w-11 rounded-full min-[720px]:h-14 min-[720px]:w-14 ${classes.track}`} />
 
       {hasDelta ? (
@@ -100,10 +100,10 @@ export function ScoreBar({
         </div>
 
         <div className="min-w-0">
-          <p className="whitespace-normal break-words text-[7.5px] font-black uppercase leading-[1.05] tracking-wide text-secondary/65 min-[390px]:text-[8.5px] min-[720px]:text-[9.5px]">
+          <p className="whitespace-normal break-words text-[7.5px] font-black uppercase leading-[1.05] tracking-wide text-secondary/65 min-[390px]:text-[8.5px] min-[720px]:text-[9.5px] lg:text-[10px]">
             {label}
           </p>
-          <p className={`mt-0.5 whitespace-nowrap font-display text-[0.92rem] font-black leading-none tabular-nums min-[390px]:text-[1.08rem] min-[720px]:text-[1.22rem] ${classes.text}`}>
+          <p className={`mt-0.5 whitespace-nowrap font-display text-[0.92rem] font-black leading-none tabular-nums min-[390px]:text-[1.08rem] min-[720px]:text-[1.22rem] lg:text-[1.35rem] xl:text-[1.45rem] ${classes.text}`}>
             {displayValue}
           </p>
         </div>

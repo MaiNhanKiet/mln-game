@@ -7,7 +7,7 @@ import type { DecisionDirection, ScenarioCard } from '@/types/game'
 const QUESTION_TIME_LIMIT_MS = 30000;
 const SWIPE_DISTANCE_THRESHOLD = 100;
 const SWIPE_CHOICE_BASE =
-  'pressable rounded-game px-3 py-3.5 text-left text-base font-extrabold transition active:scale-95 sm:text-lg'
+  'pressable rounded-game px-3 py-3.5 text-left text-base font-extrabold transition active:scale-95 sm:text-lg lg:px-4 lg:py-4 lg:text-xl'
 
 type SwipeScenarioCardProps = {
   card: ScenarioCard;
@@ -111,7 +111,7 @@ export const SwipeScenarioCard = forwardRef<
     <div className="flex h-full min-h-0 w-full flex-1 flex-col">
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <motion.article
-          className="absolute inset-0 flex select-none flex-col overflow-hidden rounded-game bg-white p-3 ring-1 ring-secondary/10 will-change-transform cursor-grab active:cursor-grabbing sm:p-4"
+          className="absolute inset-0 flex select-none flex-col overflow-hidden rounded-game bg-white p-3 ring-1 ring-secondary/10 will-change-transform cursor-grab active:cursor-grabbing sm:p-4 lg:p-5 xl:p-6"
           drag={disabled ? false : 'x'}
           dragConstraints={{ left: 0, right: 0 }}
           dragDirectionLock
@@ -140,7 +140,7 @@ export const SwipeScenarioCard = forwardRef<
           </div>
 
           <div
-            className="mb-2 h-2.5 w-full rounded-full border-2 border-secondary bg-secondary/10 p-[2px] sm:mb-3 sm:h-3"
+            className="mb-2 h-2.5 w-full rounded-full border-2 border-secondary bg-secondary/10 p-[2px] sm:mb-3 sm:h-3 lg:h-3.5"
             role="progressbar"
             aria-valuemin={0}
             aria-valuemax={100}
@@ -155,16 +155,16 @@ export const SwipeScenarioCard = forwardRef<
             />
           </div>
 
-          <h2 className="font-display text-2xl font-bold leading-snug text-secondary sm:text-3xl md:text-[2rem] md:leading-tight">
+          <h2 className="font-display text-2xl font-bold leading-snug text-secondary sm:text-3xl md:text-[2rem] md:leading-tight lg:text-[2.25rem] xl:text-4xl">
             {card.title}
           </h2>
         </div>
 
-        <p className="mt-3 min-h-0 flex-1 overflow-hidden text-base font-semibold leading-7 text-secondary/85 sm:mt-4 sm:text-lg sm:leading-8">
+        <p className="mt-3 min-h-0 flex-1 overflow-hidden text-base font-semibold leading-7 text-secondary/85 sm:mt-4 sm:text-lg sm:leading-8 lg:mt-5 lg:text-xl lg:leading-9">
           {card.description}
         </p>
 
-        <div className="relative mt-4 grid shrink-0 grid-cols-1 gap-2.5 min-[360px]:grid-cols-2 min-[360px]:gap-3 sm:mt-5">
+        <div className="relative mt-4 grid shrink-0 grid-cols-1 gap-2.5 min-[360px]:grid-cols-2 min-[360px]:gap-3 sm:mt-5 lg:mt-6 lg:gap-4">
           <button
             type="button"
             className={`${SWIPE_CHOICE_BASE} bg-secondary/10 text-secondary`}

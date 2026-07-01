@@ -10,7 +10,7 @@ type StatsHudProps = {
 export function StatsHud({ state }: StatsHudProps) {
   return (
     <section
-      className="grid auto-rows-fr grid-cols-2 gap-1.5 px-0.5 pb-1 min-[720px]:grid-cols-4 min-[720px]:gap-2 min-[720px]:pb-1.5"
+      className="grid auto-rows-fr grid-cols-2 gap-1.5 px-0.5 pb-1 min-[720px]:grid-cols-4 min-[720px]:gap-2 min-[720px]:pb-1.5 lg:gap-2.5 xl:gap-3"
       aria-label="Chỉ số cửa hàng"
     >
       <ScoreBar
