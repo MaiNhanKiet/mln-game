@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { GameState } from '@/types/game'
 import { formatCapitalUnits } from '@/lib/number-format'
-import { hasCompletedPlaySession } from '@/lib/play-session'
+import { useCompletedPlaySession } from '@/hooks/use-client-store'
 import { useLeaderboardRealtime } from '@/hooks/use-leaderboard-realtime'
 import { sortLeaderboardEntries, mergeCurrentPlayerIntoSnapshot, type LeaderboardCategory, type LeaderboardEntry } from '@/lib/leaderboard'
 import { getPlayerStatusFromPhase } from '@/lib/sync-player-state'
@@ -145,7 +145,7 @@ function TruncatablePlayerName({
 export function Leaderboard({ state, onRestart }: LeaderboardProps) {
   const [activeCategory, setActiveCategory] = useState<LeaderboardCategory>('capital')
   const [expandedPlayerName, setExpandedPlayerName] = useState<string | null>(null)
-  const [alreadyPlayed, setAlreadyPlayed] = useState(false)
+  const alreadyPlayed = useCompletedPlaySession()
   const { data: leaderboardData, playerRanks } = useLeaderboardRealtime(state.gameRunId)
 
   const mergedLeaderboardData = useMemo(() => {
@@ -175,10 +175,6 @@ export function Leaderboard({ state, onRestart }: LeaderboardProps) {
   const ownRank = playerRanks?.[activeCategory] ?? null
   const ownScore = activeCategory === 'laborPower' ? state.staffMorale : state[activeCategory]
   const ActiveIcon = activeConfig.Icon
-
-  useEffect(() => {
-    setAlreadyPlayed(hasCompletedPlaySession())
-  }, [])
 
   useEffect(() => {
     if (!expandedPlayerName) {

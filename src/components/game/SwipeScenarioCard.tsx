@@ -1,7 +1,7 @@
 'use client'
 
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { motion, useAnimation, useMotionValue, useTransform } from 'framer-motion'
+import { motion, useAnimation, useMotionValue, useTransform, type PanInfo } from 'framer-motion'
 import type { DecisionDirection, ScenarioCard } from '@/types/game'
 
 const QUESTION_TIME_LIMIT_MS = 30000;
@@ -96,7 +96,7 @@ export const SwipeScenarioCard = forwardRef<
     [chooseDirection],
   );
 
-  const handleDragEnd = async (event: any, info: any) => {
+  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const offset = info.offset.x;
     if (offset > SWIPE_DISTANCE_THRESHOLD) {
       chooseDirection("right");

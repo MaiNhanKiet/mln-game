@@ -15,12 +15,11 @@ import {
 } from 'lucide-react'
 import { GAME_CONFIG } from '@/config/game'
 import { formatCapitalUnits } from '@/lib/number-format'
+import { useCompletedPlaySession } from '@/hooks/use-client-store'
 import { resetMobileViewport } from '@/lib/mobile-viewport'
-import { hasCompletedPlaySession } from '@/lib/play-session'
 
 type RulesScreenProps = {
   onStart: (name: string) => void
-  hasAlreadyPlayed?: boolean
 }
 
 const containerVariants = {
@@ -72,10 +71,10 @@ const stats = [
 
 const START_NOTE_SECONDS = 15
 
-export function RulesScreen({ onStart, hasAlreadyPlayed = false }: RulesScreenProps) {
+export function RulesScreen({ onStart }: RulesScreenProps) {
   const [name, setName] = useState('')
   const [error, setError] = useState('')
-  const [alreadyPlayed, setAlreadyPlayed] = useState(hasAlreadyPlayed)
+  const alreadyPlayed = useCompletedPlaySession()
   const [showStartNote, setShowStartNote] = useState(false)
   const [noteSecondsLeft, setNoteSecondsLeft] = useState(START_NOTE_SECONDS)
   const nameInputRef = useRef<HTMLInputElement>(null)
@@ -96,10 +95,6 @@ export function RulesScreen({ onStart, hasAlreadyPlayed = false }: RulesScreenPr
   }, [onStart])
 
   useEffect(() => {
-    setAlreadyPlayed(hasCompletedPlaySession())
-  }, [hasAlreadyPlayed])
-
-  useEffect(() => {
     if (window.matchMedia('(pointer: fine)').matches) {
       nameInputRef.current?.focus()
     }
@@ -109,9 +104,6 @@ export function RulesScreen({ onStart, hasAlreadyPlayed = false }: RulesScreenPr
     if (!showStartNote) {
       return
     }
-
-    hasStartedRef.current = false
-    setNoteSecondsLeft(START_NOTE_SECONDS)
 
     const intervalId = window.setInterval(() => {
       setNoteSecondsLeft((current) => Math.max(0, current - 1))
@@ -145,6 +137,8 @@ export function RulesScreen({ onStart, hasAlreadyPlayed = false }: RulesScreenPr
     nameInputRef.current?.blur()
     resetMobileViewport()
     pendingNameRef.current = trimmed
+    hasStartedRef.current = false
+    setNoteSecondsLeft(START_NOTE_SECONDS)
     setShowStartNote(true)
   }
 

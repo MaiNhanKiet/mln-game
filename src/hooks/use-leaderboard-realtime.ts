@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { useIsClient } from '@/hooks/use-client-store'
 import {
   emptyLeaderboardSnapshot,
   fetchLeaderboardSnapshot,
@@ -14,7 +15,7 @@ export function useLeaderboardRealtime(playerId?: string | null) {
   const [playerRanks, setPlayerRanks] = useState<LeaderboardPlayerRanks | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isLive, setIsLive] = useState(false)
-  const [mounted, setMounted] = useState(false)
+  const isClient = useIsClient()
 
   const refresh = useCallback(async () => {
     try {
@@ -29,8 +30,9 @@ export function useLeaderboardRealtime(playerId?: string | null) {
   }, [playerId])
 
   useEffect(() => {
-    setMounted(true)
-    void refresh()
+    const timer = window.setTimeout(() => {
+      void refresh()
+    }, 0)
 
     const supabase = createSupabaseBrowserClient()
     const channel = supabase
@@ -47,10 +49,11 @@ export function useLeaderboardRealtime(playerId?: string | null) {
       })
 
     return () => {
+      window.clearTimeout(timer)
       setIsLive(false)
       void supabase.removeChannel(channel)
     }
   }, [refresh])
 
-  return { data, playerRanks, isLoading, isLive: mounted && isLive, refresh }
+  return { data, playerRanks, isLoading, isLive: isClient && isLive, refresh }
 }

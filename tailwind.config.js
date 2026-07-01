@@ -1,6 +1,6 @@
 import { theme } from './src/config/theme'
 
-export default {
+const tailwindConfig = {
   content: ['./src/**/*.{ts,tsx}'],
   theme: {
     extend: {
@@ -14,3 +14,5 @@ export default {
   },
   plugins: [],
 }
+
+export default tailwindConfig

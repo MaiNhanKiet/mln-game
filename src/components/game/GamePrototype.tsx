@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { scenarioCards } from '@/data/scenarioCards'
 import { useGameStore } from '@/stores/use-game-store'
 import type { DecisionDirection } from '@/types/game'
@@ -19,7 +19,6 @@ import type { SwipeScenarioCardHandle } from '@/components/game/SwipeScenarioCar
 
 export function GamePrototype() {
   const state = useGameStore()
-  const [hasAlreadyPlayed, setHasAlreadyPlayed] = useState(false)
   const swipeCardRef = useRef<SwipeScenarioCardHandle>(null)
   const lastResultSoundKeyRef = useRef<string | null>(null)
 
@@ -40,12 +39,6 @@ export function GamePrototype() {
     !state.pendingResult && (state.phase === 'victory' || state.phase === 'gameOver')
   const isScrollableView = !isSwipeView && !isResultView
   const displayedShopName = state.shopName || 'Trà Sữa Đại Tư Bản'
-
-  useEffect(() => {
-    if (state.phase === 'landing') {
-      setHasAlreadyPlayed(hasCompletedPlaySession())
-    }
-  }, [state.phase])
 
   useEffect(() => {
     if (state.phase === 'playing') {
@@ -204,7 +197,7 @@ export function GamePrototype() {
     return (
       <>
         {soundControls}
-        <RulesScreen onStart={handleStartGame} hasAlreadyPlayed={hasAlreadyPlayed} />
+        <RulesScreen onStart={handleStartGame} />
       </>
     )
   }
@@ -243,6 +236,7 @@ export function GamePrototype() {
         >
           {state.pendingResult ? (
             <ResultModal
+              key={`${state.currentCardIndex}-${state.pendingResult.direction}-${state.pendingResult.feedback}`}
               result={state.pendingResult}
               onContinue={handleContinue}
               continueLabel={

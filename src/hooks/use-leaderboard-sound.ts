@@ -22,7 +22,7 @@ export function useLeaderboardSound() {
   const safeVolume = clampAudioVolume(leaderboardSfxVolume)
 
   useEffect(() => {
-    const graph = createMediaElementAudioGraph(leaderboardSoundUrl, { initialVolume: safeVolume })
+    const graph = createMediaElementAudioGraph(leaderboardSoundUrl)
     graphRef.current = graph
 
     const unlock = () => {

@@ -57,7 +57,6 @@ const getImpactRows = (impact: MetricDelta) =>
 
 export function ResultModal({ result, onContinue, continueLabel = 'Tiếp tục' }: ResultModalProps) {
   const [feedbackOpen, setFeedbackOpen] = useState(false)
-  const [endingOpen, setEndingOpen] = useState(false)
   const [feedbackOverflows, setFeedbackOverflows] = useState(false)
   const contentColumnRef = useRef<HTMLDivElement>(null)
   const metricsRef = useRef<HTMLElement>(null)
@@ -99,12 +98,6 @@ export function ResultModal({ result, onContinue, continueLabel = 'Tiếp tục'
   }, [])
 
   useEffect(() => {
-    setFeedbackOpen(false)
-    setFeedbackOverflows(false)
-    setEndingOpen(showEndingPopup)
-  }, [result.feedback, showEndingPopup])
-
-  useEffect(() => {
     const column = contentColumnRef.current
     if (!column) {
       return
@@ -134,7 +127,7 @@ export function ResultModal({ result, onContinue, continueLabel = 'Tiếp tục'
   }, [measureFeedbackFit, result.feedback, impactRows.length, isTerminal, result.ending])
 
   useEffect(() => {
-    if (!feedbackOpen && !endingOpen) {
+    if (!feedbackOpen && !showEndingPopup) {
       return
     }
 
@@ -144,7 +137,7 @@ export function ResultModal({ result, onContinue, continueLabel = 'Tiếp tục'
     return () => {
       document.body.style.overflow = previousOverflow
     }
-  }, [endingOpen, feedbackOpen])
+  }, [feedbackOpen, showEndingPopup])
 
   return (
     <>
@@ -320,7 +313,7 @@ export function ResultModal({ result, onContinue, continueLabel = 'Tiếp tục'
       </AnimatePresence>
 
       <AnimatePresence>
-        {endingOpen && showEndingPopup && result.ending ? (
+        {showEndingPopup && result.ending ? (
           <div
             className="fixed inset-0 z-[90] flex items-center justify-center bg-secondary/40 p-4 backdrop-blur-[2px]"
             role="dialog"

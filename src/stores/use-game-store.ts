@@ -4,7 +4,7 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { applyMetricDelta, resolveGamePhase } from '@/lib/game-rules'
 import { initialGameState } from '@/stores/initial-game-state'
-import type { ScenarioChoice, GameState, MetricDelta, PendingResult } from '@/types/game'
+import type { ScenarioChoice, GameState, MetricDelta } from '@/types/game'
 
 interface GameStore extends GameState {
   startGame: (shopName: string, playerId?: string) => void

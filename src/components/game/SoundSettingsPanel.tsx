@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type FormEvent } from 'react'
+import { useState } from 'react'
 import { Music2, Settings2, Volume2, VolumeX, Zap } from 'lucide-react'
 import { useSoundSettings } from '@/stores/use-sound-settings'
 
