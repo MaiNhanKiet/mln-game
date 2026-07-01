@@ -6,6 +6,7 @@ import { LayoutGroup, motion } from 'framer-motion'
 import { OutcomeTag } from '@/components/leaderboard/outcome-tag'
 import { AnimatedCount } from '@/components/ui/animated-count'
 import { TvLeaderboardSoundControls } from '@/components/tv/TvLeaderboardSoundControls'
+import { TvGameRulesButton, TvGameRulesModal } from '@/components/tv/TvGameRulesModal'
 import { useLeaderboardRealtime } from '@/hooks/use-leaderboard-realtime'
 import { useLeaderboardSound } from '@/hooks/use-leaderboard-sound'
 import { sortLeaderboardEntries, type LeaderboardCategory, type LeaderboardEntry } from '@/lib/leaderboard'
@@ -443,6 +444,7 @@ export function Leaderboard() {
   const fontScale = useTvLeaderboardSettings((s) => s.fontScale)
   const soundCooldownRef = useRef(false)
   const trophySize = getTvTrophySize(fontScale)
+  const [rulesOpen, setRulesOpen] = useState(false)
 
   const handleRankChange = useCallback(() => {
     if (soundCooldownRef.current) {
@@ -463,6 +465,10 @@ export function Leaderboard() {
       style={{ '--tv-lb-scale': fontScale } as CSSProperties}
     >
       <TvLeaderboardSoundControls onPreview={previewLeaderboardSound} />
+      <div className="fixed left-2 top-2 z-50 sm:left-4 sm:top-4">
+        <TvGameRulesButton onClick={() => setRulesOpen(true)} />
+      </div>
+      <TvGameRulesModal open={rulesOpen} onClose={() => setRulesOpen(false)} />
 
       <div className="mx-auto flex h-full w-full max-w-[1920px] min-h-0 flex-col gap-2.5 sm:gap-3">
         <header className="relative shrink-0 px-2 py-0.5 sm:px-3 sm:py-1">

@@ -2,18 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import {
-  Coins,
-  Star,
-  Zap,
-  TrendingUp,
-  Rocket,
-  ArrowLeft,
-  ArrowRight,
-  Target,
-  CheckCircle2,
-} from 'lucide-react'
+import { ArrowRight, CheckCircle2, Rocket, Target } from 'lucide-react'
 import { GAME_CONFIG } from '@/config/game'
+import { GameRulesContent } from '@/components/game/GameRulesContent'
 import { formatCapitalUnits } from '@/lib/number-format'
 import { useCompletedPlaySession } from '@/hooks/use-client-store'
 import { resetMobileViewport } from '@/lib/mobile-viewport'
@@ -41,33 +32,6 @@ const itemVariants = {
     transition: { duration: 0.42, ease: [0.22, 1, 0.36, 1] as const },
   },
 }
-
-const stats = [
-  {
-    icon: Coins,
-    label: 'Vốn tích lũy',
-    description: 'Két sắt của bạn. Hết tiền = Phá sản.',
-    iconClass: 'text-[#D4A373] bg-[#FFF4E6]',
-  },
-  {
-    icon: Star,
-    label: 'Uy tín',
-    description: 'Niềm tin của khách hàng. Mất uy tín = Tẩy chay.',
-    iconClass: 'text-[#C28B8B] bg-[#FCECEC]',
-  },
-  {
-    icon: Zap,
-    label: 'Sức lao động',
-    description: 'Thể lực nhân viên. Vắt kiệt sức = Đình công.',
-    iconClass: 'text-[#829377] bg-[#EEF3EA]',
-  },
-  {
-    icon: TrendingUp,
-    label: 'Quy mô',
-    description: 'Độ to của doanh nghiệp.',
-    iconClass: 'text-[#B07D62] bg-[#F5EDE6]',
-  },
-] as const
 
 const START_NOTE_SECONDS = 15
 
@@ -155,62 +119,7 @@ export function RulesScreen({ onStart }: RulesScreenProps) {
           className="flex max-h-[calc(100dvh-1.5rem)] flex-col overflow-hidden rounded-2xl bg-white shadow-[0_20px_60px_rgba(66,54,46,0.12)] ring-1 ring-stone-200/80 sm:max-h-[calc(100dvh-3rem)] sm:rounded-3xl lg:max-h-[min(92dvh,44rem)]"
         >
           <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6 sm:py-6 md:px-8 md:py-7">
-            <motion.header variants={itemVariants} className="text-center">
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary sm:text-xs sm:tracking-[0.2em]">
-                Tinder của Nhà Tư Bản
-              </p>
-              <h1 className="mt-1.5 font-display text-2xl font-extrabold leading-tight text-secondary sm:mt-2 sm:text-3xl lg:text-4xl">
-                Luật Chơi Khởi Nghiệp
-              </h1>
-            </motion.header>
-
-            <motion.section variants={itemVariants} className="mt-4 space-y-2.5 sm:mt-6 sm:space-y-3">
-              <h2 className="text-xs font-extrabold uppercase tracking-wide text-secondary/70 sm:text-sm">
-                4 thanh sinh mệnh
-              </h2>
-              <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-2.5 md:gap-3">
-                {stats.map(({ icon: Icon, label, description, iconClass }) => (
-                  <li
-                    key={label}
-                    className="flex items-start gap-2.5 rounded-xl border border-stone-100 bg-stone-50/80 p-2.5 sm:gap-3 sm:rounded-2xl sm:p-3"
-                  >
-                    <span
-                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg sm:h-10 sm:w-10 sm:rounded-xl ${iconClass}`}
-                    >
-                      <Icon className="h-[18px] w-[18px] sm:h-5 sm:w-5" strokeWidth={2.4} />
-                    </span>
-                    <div className="min-w-0 pt-0.5">
-                      <p className="text-xs font-extrabold text-secondary sm:text-sm">{label}</p>
-                      <p className="mt-0.5 text-[11px] leading-4 text-secondary/70 sm:text-sm sm:leading-5">
-                        {description}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </motion.section>
-
-            <motion.section variants={itemVariants} className="mt-4 sm:mt-6">
-              <h2 className="text-xs font-extrabold uppercase tracking-wide text-secondary/70 sm:text-sm">
-                Cơ chế thao tác
-              </h2>
-              <div className="mt-2.5 grid grid-cols-2 gap-2 sm:mt-3 sm:gap-3">
-                <div className="rounded-xl border border-red-100 bg-red-50 p-3 text-center sm:rounded-2xl sm:p-4">
-                  <ArrowLeft className="mx-auto h-5 w-5 text-red-500 sm:h-[22px] sm:w-[22px]" strokeWidth={2.6} />
-                  <p className="mt-1.5 text-xs font-extrabold text-red-700 sm:mt-2 sm:text-sm">Quẹt Trái</p>
-                  <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-red-600/80 sm:text-xs">
-                    Từ chối
-                  </p>
-                </div>
-                <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3 text-center sm:rounded-2xl sm:p-4">
-                  <ArrowRight className="mx-auto h-5 w-5 text-emerald-600 sm:h-[22px] sm:w-[22px]" strokeWidth={2.6} />
-                  <p className="mt-1.5 text-xs font-extrabold text-emerald-800 sm:mt-2 sm:text-sm">Quẹt Phải</p>
-                  <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700/80 sm:text-xs">
-                    Đồng ý
-                  </p>
-                </div>
-              </div>
-            </motion.section>
+            <GameRulesContent />
           </div>
 
           <motion.form
