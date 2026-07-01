@@ -4,15 +4,18 @@ import { useCallback, useEffect, useState } from 'react'
 import { useIsClient } from '@/hooks/use-client-store'
 import {
   emptyLeaderboardSnapshot,
+  emptyLeaderboardStatusCounts,
   fetchLeaderboardSnapshot,
   type LeaderboardPlayerRanks,
   type LeaderboardSnapshot,
+  type LeaderboardStatusCounts,
 } from '@/lib/leaderboard'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 
 export function useLeaderboardRealtime(playerId?: string | null) {
   const [data, setData] = useState<LeaderboardSnapshot>(emptyLeaderboardSnapshot)
   const [playerRanks, setPlayerRanks] = useState<LeaderboardPlayerRanks | null>(null)
+  const [statusCounts, setStatusCounts] = useState<LeaderboardStatusCounts>(emptyLeaderboardStatusCounts)
   const [isLoading, setIsLoading] = useState(true)
   const [isLive, setIsLive] = useState(false)
   const isClient = useIsClient()
@@ -22,6 +25,7 @@ export function useLeaderboardRealtime(playerId?: string | null) {
       const result = await fetchLeaderboardSnapshot(playerId ?? undefined)
       setData(result.snapshot)
       setPlayerRanks(result.playerRanks)
+      setStatusCounts(result.statusCounts)
     } catch (error) {
       console.error('Failed to fetch leaderboard:', error)
     } finally {
@@ -55,5 +59,5 @@ export function useLeaderboardRealtime(playerId?: string | null) {
     }
   }, [refresh])
 
-  return { data, playerRanks, isLoading, isLive: isClient && isLive, refresh }
+  return { data, playerRanks, statusCounts, isLoading, isLive: isClient && isLive, refresh }
 }

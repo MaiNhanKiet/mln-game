@@ -8,9 +8,47 @@ export type LeaderboardSnapshot = Record<LeaderboardCategory, LeaderboardEntry[]
 
 export type LeaderboardPlayerRanks = Record<LeaderboardCategory, number | null>
 
+export type LeaderboardStatusCounts = {
+  playing: number
+  victory: number
+  gameOver: number
+  total: number
+}
+
 export type LeaderboardFetchResult = {
   snapshot: LeaderboardSnapshot
   playerRanks: LeaderboardPlayerRanks | null
+  statusCounts: LeaderboardStatusCounts
+}
+
+export const emptyLeaderboardStatusCounts = (): LeaderboardStatusCounts => ({
+  playing: 0,
+  victory: 0,
+  gameOver: 0,
+  total: 0,
+})
+
+export function getLeaderboardStatusCounts(entries: LeaderboardEntry[]): LeaderboardStatusCounts {
+  let playing = 0
+  let victory = 0
+  let gameOver = 0
+
+  for (const entry of entries) {
+    if (entry.status === 'VICTORY') {
+      victory += 1
+    } else if (entry.status === 'GAME_OVER') {
+      gameOver += 1
+    } else if (entry.status === 'PLAYING') {
+      playing += 1
+    }
+  }
+
+  return {
+    playing,
+    victory,
+    gameOver,
+    total: entries.length,
+  }
 }
 
 /** Win + đang chơi xếp chung theo điểm; game over luôn dưới mọi win (kể cả điểm cao hơn).
@@ -160,5 +198,6 @@ export async function fetchLeaderboardSnapshot(playerId?: string): Promise<Leade
       laborPower: sortLeaderboardEntries(data.topLaborPower ?? [], 'laborPower'),
     },
     playerRanks: data.playerRanks ?? null,
+    statusCounts: data.statusCounts ?? emptyLeaderboardStatusCounts(),
   }
 }

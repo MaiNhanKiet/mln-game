@@ -12,6 +12,7 @@ import { sortLeaderboardEntries, type LeaderboardCategory, type LeaderboardEntry
 import {
   getTvRowGridStyle,
   getTvTrophySize,
+  tvFs,
   TV_LB_BADGE_WIDTH,
   TV_LB_FONT,
   TV_LB_RANK_WIDTH,
@@ -437,7 +438,7 @@ function LeaderboardColumn({ config, entries, isLoading, onRankChange, trophySiz
 }
 
 export function Leaderboard() {
-  const { data, isLoading } = useLeaderboardRealtime()
+  const { data, isLoading, statusCounts } = useLeaderboardRealtime()
   const { playRankChangeSound, previewLeaderboardSound } = useLeaderboardSound()
   const fontScale = useTvLeaderboardSettings((s) => s.fontScale)
   const soundCooldownRef = useRef(false)
@@ -480,6 +481,27 @@ export function Leaderboard() {
               </span>{' '}
               Tư Bản
             </h1>
+
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-2 sm:mt-2.5 sm:gap-2.5">
+              {[
+                { label: 'PLAYING', value: statusCounts.playing, className: 'border-secondary/15 bg-white text-secondary' },
+                { label: 'VICTORY', value: statusCounts.victory, className: 'border-[#D4AF37]/40 bg-[#FFF4B8] text-secondary' },
+                { label: 'GAME OVER', value: statusCounts.gameOver, className: 'border-secondary/20 bg-ink-200 text-secondary' },
+                { label: 'TOTAL', value: statusCounts.total, className: 'border-secondary bg-secondary text-white' },
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  className={`min-w-[5.5rem] rounded-xl border-2 px-3 py-1.5 text-center shadow-[2px_2px_0_0_#42362E] sm:min-w-[6.5rem] sm:px-4 sm:py-2 ${stat.className}`}
+                >
+                  <p className="font-extrabold uppercase tracking-wide opacity-85" style={tvFs(10)}>
+                    {stat.label}
+                  </p>
+                  <p className="mt-0.5 font-extrabold tabular-nums leading-none" style={tvFs(22)}>
+                    <AnimatedCount value={stat.value} />
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </header>
 

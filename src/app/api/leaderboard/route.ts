@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getLeaderboardRanks, takeTopLeaderboardEntries } from '@/lib/leaderboard'
+import {
+  getLeaderboardRanks,
+  getLeaderboardStatusCounts,
+  takeTopLeaderboardEntries,
+} from '@/lib/leaderboard'
 import { prisma } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
@@ -26,6 +30,7 @@ export async function GET(request: NextRequest) {
       topReputation: takeTopLeaderboardEntries(players, 'reputation', LEADERBOARD_SIZE),
       topLaborPower: takeTopLeaderboardEntries(players, 'laborPower', LEADERBOARD_SIZE),
       playerRanks: playerId ? getLeaderboardRanks(players, playerId) : null,
+      statusCounts: getLeaderboardStatusCounts(players),
     })
   } catch (error) {
     console.error('Error fetching leaderboard:', error)
