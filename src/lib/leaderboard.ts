@@ -95,6 +95,52 @@ export const emptyLeaderboardSnapshot = (): LeaderboardSnapshot => ({
   laborPower: [],
 })
 
+type CurrentPlayerSnapshot = {
+  id: string
+  playerName: string
+  capital: number
+  reputation: number
+  laborPower: number
+  scale: number
+  status: string
+}
+
+export function mergeCurrentPlayerIntoSnapshot(
+  snapshot: LeaderboardSnapshot,
+  player: CurrentPlayerSnapshot | null,
+): LeaderboardSnapshot {
+  if (!player) {
+    return snapshot
+  }
+
+  const mergeEntries = (entries: LeaderboardEntry[]) => {
+    const index = entries.findIndex((entry) => entry.id === player.id)
+
+    if (index < 0) {
+      return entries
+    }
+
+    const next = [...entries]
+    next[index] = {
+      ...next[index],
+      playerName: player.playerName || next[index].playerName,
+      capital: player.capital,
+      reputation: player.reputation,
+      laborPower: player.laborPower,
+      scale: player.scale,
+      status: player.status,
+    }
+
+    return next
+  }
+
+  return {
+    capital: mergeEntries(snapshot.capital),
+    reputation: mergeEntries(snapshot.reputation),
+    laborPower: mergeEntries(snapshot.laborPower),
+  }
+}
+
 export async function fetchLeaderboardSnapshot(playerId?: string): Promise<LeaderboardFetchResult> {
   const url = playerId
     ? `/api/leaderboard?playerId=${encodeURIComponent(playerId)}`

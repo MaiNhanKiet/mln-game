@@ -4,9 +4,10 @@ import { useEffect, useRef, useState } from 'react'
 import { scenarioCards } from '@/data/scenarioCards'
 import { useGameStore } from '@/stores/use-game-store'
 import type { DecisionDirection } from '@/types/game'
-import { createPlayer, getPlayerSnapshotFromState, syncPlayerToApi } from '@/lib/api/player'
+import { createPlayer } from '@/lib/api/player'
 import { hasCompletedPlaySession, markPlaySessionCompleted } from '@/lib/play-session'
 import { resetMobileViewport } from '@/lib/mobile-viewport'
+import { getPlayerStatusFromPhase, syncPlayerState } from '@/lib/sync-player-state'
 import { useGameAudio } from '@/hooks/use-game-audio'
 import { Leaderboard } from '@/components/game/Leaderboard'
 import { ResultModal } from '@/components/game/ResultModal'
@@ -28,8 +29,6 @@ export function GamePrototype() {
     playEffectSound,
     previewSuccess,
     previewFail,
-    successSoundRef,
-    failSoundRef,
   } = useGameAudio()
 
   const activeCard =
@@ -68,6 +67,18 @@ export function GamePrototype() {
   }, [isLeaderboardView])
 
   useEffect(() => {
+    if (!isLeaderboardView || !state.gameRunId) {
+      return
+    }
+
+    if (state.phase !== 'victory' && state.phase !== 'gameOver') {
+      return
+    }
+
+    void syncPlayerState(getPlayerStatusFromPhase(state.phase))
+  }, [isLeaderboardView, state.gameRunId, state.phase])
+
+  useEffect(() => {
     if (!isSwipeView) {
       return
     }
@@ -96,11 +107,11 @@ export function GamePrototype() {
     const capitalDelta = state.pendingResult.impact.capital ?? 0
 
     if (capitalDelta > 0) {
-      playEffectSound(successSoundRef.current)
+      playEffectSound('success')
     } else if (capitalDelta < 0) {
-      playEffectSound(failSoundRef.current)
+      playEffectSound('fail')
     }
-  }, [failSoundRef, playEffectSound, state.currentCardIndex, state.pendingResult, successSoundRef])
+  }, [playEffectSound, state.currentCardIndex, state.pendingResult])
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -128,36 +139,7 @@ export function GamePrototype() {
   }, [isPlaying, musicEnabled, startBackgroundMusic])
 
   const syncCurrentPlayer = async (status: 'PLAYING' | 'VICTORY' | 'GAME_OVER') => {
-    const current = useGameStore.getState()
-    if (!current.gameRunId && !current.shopName) {
-      return
-    }
-
-    const payload = {
-      ...getPlayerSnapshotFromState(current),
-      status,
-    }
-
-    const sync = async (playerId: string) => syncPlayerToApi(playerId, payload)
-
-    let playerId = current.gameRunId
-    let result = playerId ? await sync(playerId) : { ok: false as const, status: 404, error: 'Player not found' }
-
-    if (!result.ok && result.status === 404 && current.shopName) {
-      const created = await createPlayer(current.shopName)
-      if (!created.ok) {
-        console.warn('Không thể tạo lại người chơi:', created.error)
-        return
-      }
-
-      playerId = created.data.id
-      useGameStore.getState().setPlayerId(playerId)
-      result = await sync(playerId)
-    }
-
-    if (!result.ok) {
-      console.warn('Đồng bộ điểm thất bại:', result.error)
-    }
+    await syncPlayerState(status)
   }
 
   const handleStartGame = async (playerName: string) => {
@@ -203,8 +185,8 @@ export function GamePrototype() {
 
   const handleContinue = async () => {
     if (state.pendingResult?.nextPhase === 'gameOver' || state.pendingResult?.nextPhase === 'victory') {
-      const finalStatus = state.pendingResult.nextPhase === 'victory' ? 'VICTORY' : 'GAME_OVER'
-      await syncCurrentPlayer(finalStatus)
+      const finalStatus = getPlayerStatusFromPhase(state.pendingResult.nextPhase)
+      await syncPlayerState(finalStatus)
       markPlaySessionCompleted()
     }
     state.continueAfterResult()

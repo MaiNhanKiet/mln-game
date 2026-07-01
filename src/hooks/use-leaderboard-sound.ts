@@ -1,7 +1,16 @@
 'use client'
 
 import { useCallback, useEffect, useRef } from 'react'
-import { clampAudioVolume } from '@/lib/tv-leaderboard-typography'
+import {
+  clampAudioVolume,
+  createMediaElementAudioGraph,
+  destroyMediaElementAudioGraph,
+  playMediaAudio,
+  resumeAudioContext,
+  setMediaGain,
+  unlockMediaAudio,
+  type MediaElementAudioGraph,
+} from '@/lib/web-audio'
 import { useSoundSettings } from '@/stores/use-sound-settings'
 
 const leaderboardSoundUrl = '/sounds/leaderboard.mp3'
@@ -9,19 +18,15 @@ const leaderboardSoundUrl = '/sounds/leaderboard.mp3'
 export function useLeaderboardSound() {
   const leaderboardSfxEnabled = useSoundSettings((s) => s.leaderboardSfxEnabled)
   const leaderboardSfxVolume = useSoundSettings((s) => s.leaderboardSfxVolume)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const graphRef = useRef<MediaElementAudioGraph | null>(null)
   const safeVolume = clampAudioVolume(leaderboardSfxVolume)
 
   useEffect(() => {
-    const audio = new Audio(leaderboardSoundUrl)
-    audio.preload = 'auto'
-    audioRef.current = audio
+    const graph = createMediaElementAudioGraph(leaderboardSoundUrl, { initialVolume: safeVolume })
+    graphRef.current = graph
 
     const unlock = () => {
-      void audio.play().then(() => {
-        audio.pause()
-        audio.currentTime = 0
-      }).catch(() => undefined)
+      void unlockMediaAudio(graph)
     }
 
     window.addEventListener('pointerdown', unlock, { once: true })
@@ -30,37 +35,39 @@ export function useLeaderboardSound() {
     return () => {
       window.removeEventListener('pointerdown', unlock)
       window.removeEventListener('keydown', unlock)
-      audio.pause()
+      destroyMediaElementAudioGraph(graph)
     }
   }, [])
 
   useEffect(() => {
-    const audio = audioRef.current
-    if (audio) {
-      audio.volume = safeVolume
+    void resumeAudioContext()
+
+    const graph = graphRef.current
+    if (graph) {
+      setMediaGain(graph.gain, safeVolume)
     }
   }, [safeVolume])
 
   const playRankChangeSound = useCallback(() => {
-    const audio = audioRef.current
-    if (!audio || !leaderboardSfxEnabled) {
+    const graph = graphRef.current
+    if (!graph || !leaderboardSfxEnabled) {
       return
     }
 
-    audio.volume = safeVolume
-    audio.currentTime = 0
-    void audio.play().catch(() => undefined)
+    setMediaGain(graph.gain, safeVolume)
+    graph.audio.currentTime = 0
+    void playMediaAudio(graph)
   }, [leaderboardSfxEnabled, safeVolume])
 
   const previewLeaderboardSound = useCallback(() => {
-    const audio = audioRef.current
-    if (!audio) {
+    const graph = graphRef.current
+    if (!graph) {
       return
     }
 
-    audio.volume = safeVolume
-    audio.currentTime = 0
-    void audio.play().catch(() => undefined)
+    setMediaGain(graph.gain, safeVolume)
+    graph.audio.currentTime = 0
+    void playMediaAudio(graph)
   }, [safeVolume])
 
   return { playRankChangeSound, previewLeaderboardSound }

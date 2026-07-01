@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type ChangeEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { Music2, Settings2, Volume2, VolumeX, Zap } from 'lucide-react'
 import { useSoundSettings } from '@/stores/use-sound-settings'
 
@@ -26,8 +26,8 @@ function VolumeSlider({
 }) {
   const percent = Math.round(value * 100)
 
-  const handleVolumeInput = (event: ChangeEvent<HTMLInputElement>) => {
-    onChange(Number(event.target.value) / 100)
+  const handleVolumeInput = (event: React.FormEvent<HTMLInputElement>) => {
+    onChange(Number(event.currentTarget.value) / 100)
   }
 
   return (

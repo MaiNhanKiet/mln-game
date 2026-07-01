@@ -1,13 +1,13 @@
-const getOutcomeLabel = (status: string, compact = false) => {
+const getOutcomeLabel = (status: string) => {
   if (status === 'VICTORY') {
-    return 'Win'
+    return 'VICTORY'
   }
 
   if (status === 'GAME_OVER') {
-    return compact ? 'Over' : 'Game over'
+    return 'GAME OVER'
   }
 
-  return compact ? 'Chơi' : 'Đang chơi'
+  return 'PLAYING'
 }
 
 type OutcomeTagProps = {
@@ -16,33 +16,22 @@ type OutcomeTagProps = {
   tvScaled?: boolean
 }
 
-export function OutcomeTag({ status, compact = false, tvScaled = false }: OutcomeTagProps) {
+export function OutcomeTag({ status, tvScaled = false }: OutcomeTagProps) {
   const isVictory = status === 'VICTORY'
   const isGameOver = status === 'GAME_OVER'
-  const useFullLabel = !compact || tvScaled
 
   return (
     <span
-      title={compact && !tvScaled ? getOutcomeLabel(status, false) : undefined}
       style={
         tvScaled
           ? {
               height: 'calc(1.5rem * var(--tv-lb-scale, 1))',
               fontSize: 'calc(10px * var(--tv-lb-scale, 1))',
             }
-          : compact
-            ? {
-                height: 'calc(1.125rem * var(--tv-lb-scale, 1))',
-                fontSize: 'calc(7px * var(--tv-lb-scale, 1))',
-              }
-            : undefined
+          : undefined
       }
       className={`box-border flex w-full items-center justify-center overflow-hidden whitespace-nowrap rounded-pill border-2 text-center font-extrabold uppercase leading-none tracking-wide ${
-        tvScaled
-          ? 'px-1.5 sm:px-2'
-          : compact
-            ? 'px-1 tracking-tight'
-            : 'h-6 w-full px-1.5 text-[9px] sm:px-2 sm:text-[10px]'
+        tvScaled ? 'px-1.5 sm:px-2' : 'h-6 w-full px-1.5 text-[9px] sm:px-2 sm:text-[10px]'
       } ${
         isVictory
           ? 'border-[#D4AF37]/50 bg-[#FFF4B8] text-secondary'
@@ -51,7 +40,7 @@ export function OutcomeTag({ status, compact = false, tvScaled = false }: Outcom
             : 'border-secondary/20 bg-secondary/10 text-secondary/70'
       }`}
     >
-      {getOutcomeLabel(status, !useFullLabel)}
+      {getOutcomeLabel(status)}
     </span>
   )
 }

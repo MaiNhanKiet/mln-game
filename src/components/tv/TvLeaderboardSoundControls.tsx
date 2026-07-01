@@ -43,6 +43,7 @@ function UnitSlider({
         step={1}
         value={percent}
         disabled={disabled}
+        onInput={(event) => onChange(Number(event.currentTarget.value) / 100)}
         onChange={(event) => onChange(Number(event.target.value) / 100)}
         className="volume-range h-3 w-full touch-manipulation cursor-pointer appearance-none rounded-full border-2 border-secondary bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
       />

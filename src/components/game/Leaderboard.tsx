@@ -7,7 +7,8 @@ import type { GameState } from '@/types/game'
 import { formatCapitalUnits } from '@/lib/number-format'
 import { hasCompletedPlaySession } from '@/lib/play-session'
 import { useLeaderboardRealtime } from '@/hooks/use-leaderboard-realtime'
-import { sortLeaderboardEntries, type LeaderboardCategory, type LeaderboardEntry } from '@/lib/leaderboard'
+import { sortLeaderboardEntries, mergeCurrentPlayerIntoSnapshot, type LeaderboardCategory, type LeaderboardEntry } from '@/lib/leaderboard'
+import { getPlayerStatusFromPhase } from '@/lib/sync-player-state'
 import { OutcomeTag } from '@/components/leaderboard/outcome-tag'
 
 type LeaderboardProps = {
@@ -144,20 +145,40 @@ function TruncatablePlayerName({
 export function Leaderboard({ state, onRestart }: LeaderboardProps) {
   const [activeCategory, setActiveCategory] = useState<LeaderboardCategory>('capital')
   const [expandedPlayerName, setExpandedPlayerName] = useState<string | null>(null)
+  const [alreadyPlayed, setAlreadyPlayed] = useState(false)
   const { data: leaderboardData, playerRanks } = useLeaderboardRealtime(state.gameRunId)
+
+  const mergedLeaderboardData = useMemo(() => {
+    if (!state.gameRunId) {
+      return leaderboardData
+    }
+
+    return mergeCurrentPlayerIntoSnapshot(leaderboardData, {
+      id: state.gameRunId,
+      playerName: state.shopName,
+      capital: state.capital,
+      reputation: state.reputation,
+      laborPower: state.staffMorale,
+      scale: state.scale,
+      status: getPlayerStatusFromPhase(state.phase),
+    })
+  }, [leaderboardData, state])
 
   const activeConfig = useMemo(
     () => categories.find((category) => category.id === activeCategory) ?? categories[0],
     [activeCategory],
   )
   const activeEntries = useMemo(
-    () => sortLeaderboardEntries(leaderboardData[activeCategory] || [], activeCategory),
-    [activeCategory, leaderboardData],
+    () => sortLeaderboardEntries(mergedLeaderboardData[activeCategory] || [], activeCategory),
+    [activeCategory, mergedLeaderboardData],
   )
   const ownRank = playerRanks?.[activeCategory] ?? null
   const ownScore = activeCategory === 'laborPower' ? state.staffMorale : state[activeCategory]
   const ActiveIcon = activeConfig.Icon
-  const alreadyPlayed = hasCompletedPlaySession()
+
+  useEffect(() => {
+    setAlreadyPlayed(hasCompletedPlaySession())
+  }, [])
 
   useEffect(() => {
     if (!expandedPlayerName) {

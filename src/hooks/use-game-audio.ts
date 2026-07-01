@@ -1,6 +1,16 @@
 'use client'
 
 import { useCallback, useEffect, useRef } from 'react'
+import {
+  createMediaElementAudioGraph,
+  destroyMediaElementAudioGraph,
+  fadeMediaGainTo,
+  playMediaAudio,
+  resumeAudioContext,
+  setMediaGain,
+  unlockMediaAudio,
+  type MediaElementAudioGraph,
+} from '@/lib/web-audio'
 import { useSoundSettings } from '@/stores/use-sound-settings'
 
 const backgroundMusicUrl = '/sounds/musicBackground.mp3'
@@ -8,7 +18,6 @@ const successSoundUrl = '/sounds/success.mp3'
 const failSoundUrl = '/sounds/fail.mp3'
 
 const FADE_DURATION_MS = 700
-const FADE_STEP_MS = 35
 
 export function useGameAudio() {
   const musicEnabled = useSoundSettings((s) => s.musicEnabled)
@@ -16,128 +25,112 @@ export function useGameAudio() {
   const sfxEnabled = useSoundSettings((s) => s.sfxEnabled)
   const sfxVolume = useSoundSettings((s) => s.sfxVolume)
 
-  const musicRef = useRef<HTMLAudioElement | null>(null)
-  const successSoundRef = useRef<HTMLAudioElement | null>(null)
-  const failSoundRef = useRef<HTMLAudioElement | null>(null)
-  const fadeTimerRef = useRef<number | null>(null)
+  const musicGraphRef = useRef<MediaElementAudioGraph | null>(null)
+  const successGraphRef = useRef<MediaElementAudioGraph | null>(null)
+  const failGraphRef = useRef<MediaElementAudioGraph | null>(null)
   const hasInteractedRef = useRef(false)
 
-  const clearFadeTimer = useCallback(() => {
-    if (fadeTimerRef.current !== null) {
-      window.clearInterval(fadeTimerRef.current)
-      fadeTimerRef.current = null
+  const fadeMusicTo = useCallback((targetVolume: number, onComplete?: () => void) => {
+    const musicGraph = musicGraphRef.current
+    if (!musicGraph) {
+      return
     }
+
+    fadeMediaGainTo(musicGraph, targetVolume, FADE_DURATION_MS, onComplete)
   }, [])
 
-  const fadeMusicTo = useCallback(
-    (targetVolume: number, onComplete?: () => void) => {
-      const music = musicRef.current
-      if (!music) {
-        return
-      }
-
-      clearFadeTimer()
-
-      const startVolume = music.volume
-      const steps = Math.max(1, Math.round(FADE_DURATION_MS / FADE_STEP_MS))
-      let currentStep = 0
-
-      fadeTimerRef.current = window.setInterval(() => {
-        currentStep += 1
-        const progress = Math.min(1, currentStep / steps)
-        music.volume = startVolume + (targetVolume - startVolume) * progress
-
-        if (progress >= 1) {
-          clearFadeTimer()
-          onComplete?.()
-        }
-      }, FADE_STEP_MS)
-    },
-    [clearFadeTimer],
-  )
-
   const startBackgroundMusic = useCallback(() => {
-    const music = musicRef.current
-    if (!music || !musicEnabled) {
+    const musicGraph = musicGraphRef.current
+    if (!musicGraph || !musicEnabled) {
       return
     }
 
     hasInteractedRef.current = true
-
-    if (music.paused) {
-      void music.play().catch(() => undefined)
-    }
-
+    void playMediaAudio(musicGraph)
     fadeMusicTo(musicVolume)
   }, [fadeMusicTo, musicEnabled, musicVolume])
 
   const stopBackgroundMusic = useCallback(() => {
     fadeMusicTo(0, () => {
-      musicRef.current?.pause()
+      musicGraphRef.current?.audio.pause()
     })
   }, [fadeMusicTo])
 
   const playEffectSound = useCallback(
-    (sound: HTMLAudioElement | null) => {
-      if (!sfxEnabled || !sound) {
+    (kind: 'success' | 'fail') => {
+      if (!sfxEnabled) {
         return
       }
 
-      sound.currentTime = 0
-      sound.volume = sfxVolume
-      void sound.play().catch(() => undefined)
+      const graph = kind === 'success' ? successGraphRef.current : failGraphRef.current
+      if (!graph) {
+        return
+      }
+
+      setMediaGain(graph.gain, sfxVolume)
+      graph.audio.currentTime = 0
+      void playMediaAudio(graph)
     },
     [sfxEnabled, sfxVolume],
   )
 
   const previewSuccess = useCallback(() => {
-    if (!successSoundRef.current) {
+    const graph = successGraphRef.current
+    if (!graph) {
       return
     }
-    const sound = successSoundRef.current
-    sound.currentTime = 0
-    sound.volume = sfxVolume
-    void sound.play().catch(() => undefined)
+
+    setMediaGain(graph.gain, sfxVolume)
+    graph.audio.currentTime = 0
+    void playMediaAudio(graph)
   }, [sfxVolume])
 
   const previewFail = useCallback(() => {
-    if (!failSoundRef.current) {
+    const graph = failGraphRef.current
+    if (!graph) {
       return
     }
-    const sound = failSoundRef.current
-    sound.currentTime = 0
-    sound.volume = sfxVolume
-    void sound.play().catch(() => undefined)
+
+    setMediaGain(graph.gain, sfxVolume)
+    graph.audio.currentTime = 0
+    void playMediaAudio(graph)
   }, [sfxVolume])
 
   useEffect(() => {
-    const music = new Audio(backgroundMusicUrl)
-    const success = new Audio(successSoundUrl)
-    const fail = new Audio(failSoundUrl)
+    const musicGraph = createMediaElementAudioGraph(backgroundMusicUrl, {
+      loop: true,
+      initialVolume: 0,
+    })
+    const successGraph = createMediaElementAudioGraph(successSoundUrl)
+    const failGraph = createMediaElementAudioGraph(failSoundUrl)
 
-    music.loop = true
-    music.volume = 0
-    music.preload = 'auto'
-    success.preload = 'auto'
-    fail.preload = 'auto'
+    musicGraphRef.current = musicGraph
+    successGraphRef.current = successGraph
+    failGraphRef.current = failGraph
 
-    musicRef.current = music
-    successSoundRef.current = success
-    failSoundRef.current = fail
+    const unlock = () => {
+      void unlockMediaAudio(musicGraph)
+    }
+
+    window.addEventListener('pointerdown', unlock, { once: true })
+    window.addEventListener('keydown', unlock, { once: true })
 
     return () => {
-      clearFadeTimer()
-      music.pause()
-      success.pause()
-      fail.pause()
+      window.removeEventListener('pointerdown', unlock)
+      window.removeEventListener('keydown', unlock)
+      destroyMediaElementAudioGraph(musicGraph)
+      destroyMediaElementAudioGraph(successGraph)
+      destroyMediaElementAudioGraph(failGraph)
     }
-  }, [clearFadeTimer])
+  }, [])
 
   useEffect(() => {
-    const music = musicRef.current
-    if (!music) {
+    const musicGraph = musicGraphRef.current
+    if (!musicGraph) {
       return
     }
+
+    void resumeAudioContext()
 
     if (!musicEnabled) {
       stopBackgroundMusic()
@@ -148,20 +141,21 @@ export function useGameAudio() {
       return
     }
 
-    clearFadeTimer()
-    music.volume = musicVolume
-  }, [musicEnabled, musicVolume, stopBackgroundMusic, clearFadeTimer])
+    setMediaGain(musicGraph.gain, musicVolume)
+  }, [musicEnabled, musicVolume, stopBackgroundMusic])
 
   useEffect(() => {
-    const success = successSoundRef.current
-    const fail = failSoundRef.current
+    void resumeAudioContext()
 
-    if (success) {
-      success.volume = sfxVolume
+    const successGraph = successGraphRef.current
+    const failGraph = failGraphRef.current
+
+    if (successGraph) {
+      setMediaGain(successGraph.gain, sfxVolume)
     }
 
-    if (fail) {
-      fail.volume = sfxVolume
+    if (failGraph) {
+      setMediaGain(failGraph.gain, sfxVolume)
     }
   }, [sfxVolume])
 
@@ -191,7 +185,5 @@ export function useGameAudio() {
     playEffectSound,
     previewSuccess,
     previewFail,
-    successSoundRef,
-    failSoundRef,
   }
 }
