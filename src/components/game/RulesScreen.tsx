@@ -305,7 +305,7 @@ export function RulesScreen({ onStart }: RulesScreenProps) {
             <p className="mt-4 text-sm font-bold leading-6 text-secondary sm:text-base sm:leading-7">
               Sau{' '}
               <span className="text-primary">{GAME_CONFIG.totalRounds} câu hỏi</span>, giữ vốn từ{' '}
-              <span className="text-primary">{formatCapitalUnits(GAME_CONFIG.initialCapital)}</span> trở lên
+              <span className="text-primary">{formatCapitalUnits(GAME_CONFIG.victoryCapital)}</span> trở lên
               và các chỉ số còn trên 0 để chiến thắng. Hết vốn hoặc chỉ số về 0 là thua cuộc!
             </p>
 

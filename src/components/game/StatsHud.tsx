@@ -18,7 +18,7 @@ export function StatsHud({ state }: StatsHudProps) {
         displayValue={formatCapitalUnits(state.capital)}
         helperText="1 đơn vị = 1 triệu VNĐ"
         label="Vốn tích lũy"
-        maxValue={GAME_CONFIG.victoryCapital}
+        maxValue={GAME_CONFIG.capitalHudMax}
         tone="capital"
         value={state.capital}
       />
